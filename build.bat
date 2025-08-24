@@ -34,11 +34,16 @@ if %errorlevel% neq 0 (
 )
 echo.
 
+:: Read version from file
+set /p version=<version.txt
+echo Version: %version%
+echo.
+
 :: Build Windows version
 echo Building Windows 64-bit version...
 set GOOS=windows
 set GOARCH=amd64
-go build -ldflags "-s -w" -o "build/VideoDown-Go-windows-amd64.exe" main.go
+go build -ldflags "-s -w -X main.Version=%version%" -o "build/VideoDown-Go-windows-amd64.exe" main.go
 if %errorlevel% neq 0 (
     echo Error: Windows build failed
     pause
@@ -50,9 +55,8 @@ echo Windows 64-bit version build completed
 echo Building Linux 64-bit version...
 set GOOS=linux
 set GOARCH=amd64
-go build -ldflags "-s -w" -o "build/VideoDown-Go-linux-amd64" main.go
-if %errorlevel% neq 0 (
-    echo Error: Linux build failed
+go build -ldflags "-s -w -X main.Version=%version%" -o "build/VideoDown-Go-linux-amd64" main.go
+if %errorlevel% neq 0 (    echo Error: Linux build failed
     pause
     exit /b 1
 )
@@ -62,7 +66,7 @@ echo Linux 64-bit version build completed
 echo Building macOS 64-bit version...
 set GOOS=darwin
 set GOARCH=amd64
-go build -ldflags "-s -w" -o "build/VideoDown-Go-darwin-amd64" main.go
+go build -ldflags "-s -w -X main.Version=%version%" -o "build/VideoDown-Go-darwin-amd64" main.go
 if %errorlevel% neq 0 (
     echo Warning: macOS build failed, skipping...
 ) else (

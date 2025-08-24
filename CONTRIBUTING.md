@@ -1,53 +1,295 @@
 # 贡献指南
 
-感谢您对 VideoDown-Go 项目的关注！我们欢迎所有形式的贡献，包括但不限于：
+感谢您对 VideoDown-Go 项目的关注！我们欢迎各种形式的贡献，包括但不限于代码贡献、文档改进、问题报告和功能建议。
 
-- 🐛 报告 Bug
-- 💡 提出新功能建议
-- 📝 改进文档
-- 🔧 提交代码修复
-- 🌟 添加新功能
+## 🤝 贡献方式
 
-## 📋 开始之前
+### 1. 代码贡献
+- 修复 Bug
+- 添加新功能
+- 性能优化
+- 代码重构
 
-在开始贡献之前，请：
+### 2. 文档贡献
+- 改进现有文档
+- 添加使用示例
+- 翻译文档
+- 编写教程
 
-1. 阅读我们的 [README.md](README.md)
-2. 查看现有的 [Issues](https://github.com/oskey/VideoDown-Go/issues)
-3. 确保您的贡献符合项目的目标和范围
+### 3. 测试贡献
+- 报告 Bug
+- 测试新功能
+- 编写测试用例
+- 性能测试
+
+### 4. 社区贡献
+- 回答问题
+- 分享使用经验
+- 推广项目
+- 组织活动
+
+## 🚀 开始贡献
+
+### 1. Fork 项目
+
+1. 访问 [VideoDown-Go GitHub 页面](https://github.com/oskey/VideoDown-Go)
+2. 点击右上角的 "Fork" 按钮
+3. 将项目 Fork 到您的 GitHub 账户
+
+### 2. 克隆项目
+
+```bash
+# 克隆您 Fork 的项目
+git clone https://github.com/YOUR_USERNAME/VideoDown-Go.git
+cd VideoDown-Go
+
+# 添加上游仓库
+git remote add upstream https://github.com/oskey/VideoDown-Go.git
+```
+
+### 3. 设置开发环境
+
+#### 安装依赖
+
+```bash
+# 安装 Go 依赖
+go mod download
+
+# 安装开发工具
+go install golang.org/x/tools/cmd/goimports@latest
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+```
+
+#### 配置外部工具
+
+```bash
+# 创建 bin 目录
+mkdir -p bin
+
+# 下载 yt-dlp
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o bin/yt-dlp
+chmod +x bin/yt-dlp
+
+# 下载 FFmpeg (根据您的系统)
+# 详见安装指南
+```
+
+### 4. 运行项目
+
+```bash
+# 运行开发服务器
+go run main.go
+
+# 或使用构建脚本
+./build.sh  # Linux/macOS
+build.bat   # Windows
+```
+
+## 🔧 开发流程
+
+### 1. 创建功能分支
+
+```bash
+# 同步上游更改
+git fetch upstream
+git checkout main
+git merge upstream/main
+
+# 创建新分支
+git checkout -b feature/your-feature-name
+# 或
+git checkout -b fix/bug-description
+```
+
+### 2. 开发和测试
+
+#### 代码规范
+
+- 使用 `gofmt` 格式化代码
+- 使用 `goimports` 管理导入
+- 遵循 Go 语言惯例
+- 添加适当的注释
+
+```bash
+# 格式化代码
+go fmt ./...
+
+# 整理导入
+goimports -w .
+
+# 运行 linter
+golangci-lint run
+```
+
+#### 测试
+
+```bash
+# 运行测试
+go test ./...
+
+# 运行测试并显示覆盖率
+go test -cover ./...
+
+# 生成覆盖率报告
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
+```
+
+### 3. 提交更改
+
+#### 提交信息规范
+
+使用清晰、描述性的提交信息：
+
+```bash
+# 功能添加
+git commit -m "feat: add batch download support"
+
+# Bug 修复
+git commit -m "fix: resolve memory leak in download manager"
+
+# 文档更新
+git commit -m "docs: update installation guide"
+
+# 性能优化
+git commit -m "perf: optimize video info extraction"
+
+# 代码重构
+git commit -m "refactor: simplify websocket handler"
+```
+
+#### 提交类型
+
+- `feat`: 新功能
+- `fix`: Bug 修复
+- `docs`: 文档更新
+- `style`: 代码格式化
+- `refactor`: 代码重构
+- `perf`: 性能优化
+- `test`: 测试相关
+- `chore`: 构建过程或辅助工具的变动
+
+### 4. 推送和创建 PR
+
+```bash
+# 推送分支
+git push origin feature/your-feature-name
+```
+
+然后在 GitHub 上创建 Pull Request。
+
+## 📝 Pull Request 指南
+
+### PR 标题
+
+使用清晰、描述性的标题：
+- `feat: Add support for TikTok video download`
+- `fix: Fix memory leak in concurrent downloads`
+- `docs: Update API documentation`
+
+### PR 描述
+
+请在 PR 描述中包含：
+
+1. **更改摘要**：简要描述您的更改
+2. **相关 Issue**：如果相关，请引用 Issue 编号
+3. **测试说明**：描述如何测试您的更改
+4. **截图**：如果有 UI 更改，请提供截图
+5. **破坏性更改**：如果有，请明确说明
+
+#### PR 模板示例
+
+```markdown
+## 更改摘要
+添加了对 TikTok 视频下载的支持，包括无水印下载功能。
+
+## 相关 Issue
+Closes #123
+
+## 更改类型
+- [x] 新功能
+- [ ] Bug 修复
+- [ ] 文档更新
+- [ ] 性能优化
+
+## 测试
+- [x] 单元测试通过
+- [x] 手动测试 TikTok 视频下载
+- [x] 测试无水印功能
+
+## 截图
+（如果适用）
+
+## 检查清单
+- [x] 代码遵循项目规范
+- [x] 添加了适当的测试
+- [x] 更新了相关文档
+- [x] 所有测试通过
+```
+
+### 代码审查
+
+我们会仔细审查每个 PR，可能会要求：
+- 代码修改
+- 添加测试
+- 更新文档
+- 性能优化
+
+请耐心等待审查，并积极响应反馈。
 
 ## 🐛 报告 Bug
 
-如果您发现了 Bug，请：
+### 搜索现有 Issue
 
-1. 检查是否已有相关的 Issue
-2. 如果没有，请创建新的 Issue，包含：
-   - 清晰的标题和描述
-   - 重现步骤
-   - 预期行为 vs 实际行为
-   - 系统环境信息（操作系统、Go 版本等）
-   - 相关的错误日志或截图
+在创建新 Issue 之前，请搜索现有 Issue 确认问题未被报告。
 
-### Bug 报告模板
+### 创建 Bug 报告
+
+请提供以下信息：
+
+1. **Bug 描述**：清晰描述问题
+2. **复现步骤**：详细的复现步骤
+3. **预期行为**：您期望的正确行为
+4. **实际行为**：实际发生的情况
+5. **环境信息**：
+   - 操作系统和版本
+   - Go 版本
+   - VideoDown-Go 版本
+   - 浏览器版本（如果相关）
+6. **错误日志**：相关的错误信息
+7. **截图**：如果有助于理解问题
+
+#### Bug 报告模板
 
 ```markdown
-**Bug 描述**
-简洁清晰地描述这个 Bug。
+## Bug 描述
+简要描述遇到的问题。
 
-**重现步骤**
-1. 进入 '...'
-2. 点击 '....'
-3. 滚动到 '....'
-4. 看到错误
+## 复现步骤
+1. 打开应用程序
+2. 输入视频链接 '...'
+3. 点击下载按钮
+4. 观察错误
 
-**预期行为**
-描述您期望发生的行为。
+## 预期行为
+应该成功下载视频。
 
-**实际行为**
-描述实际发生的行为。
+## 实际行为
+显示错误信息并下载失败。
 
-**环境信息**
-- 操作系统: [例如 Windows 11]
+## 环境信息
+- OS: Windows 10
+- Go 版本: 1.21.0
+- VideoDown-Go 版本: v1.0.0
+- 浏览器: Firefox 118.0
+
+## 错误日志
+```
+ERROR: Video unavailable
+```
+
+## 截图
+（如果适用）
 - Go 版本: [例如 1.21.0]
 - 浏览器: [例如 Chrome 120]
 

@@ -61,6 +61,250 @@
             font-size: 28px;
         }
 
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .version-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .version-text {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .version-text.has-update {
+            color: var(--warning-color);
+            font-weight: 500;
+        }
+
+        .update-btn {
+            background-color: var(--warning-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+            animation: pulse 2s infinite;
+        }
+
+        .update-btn:hover {
+            background-color: #e8890b;
+            transform: translateY(-1px);
+        }
+
+        .update-btn .material-symbols-rounded {
+            font-size: 16px;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(248, 150, 30, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(248, 150, 30, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(248, 150, 30, 0); }
+        }
+
+        /* 更新进度模态框样式 */
+        .update-modal {
+            display: none;
+            position: fixed;
+            z-index: 1003;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.3s ease-out;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .update-modal.show {
+            display: flex;
+        }
+        
+        .update-modal-content {
+            background: #ffffff;
+            padding: 0;
+            border: 2px solid #333333;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 520px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s ease-out;
+        }
+        
+        .update-modal.show .update-modal-content {
+            transform: scale(1);
+        }
+        
+        .update-modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .update-modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #333333;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .update-modal-header h3::before {
+            content: "⬇️";
+            font-size: 24px;
+        }
+        
+        .update-modal-body {
+            padding: 24px;
+            background: #ffffff;
+        }
+
+        .progress-container {
+            margin: 24px 0;
+            position: relative;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 14px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997, #17a2b8);
+            border-radius: 8px;
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: progressShine 2s infinite;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 12px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .update-info {
+            margin-bottom: 20px;
+        }
+
+        .update-info p {
+            margin: 0 0 8px 0;
+            color: #495057;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        .update-modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid #e0e0e0;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        .update-modal-footer .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .update-modal-footer .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .update-modal-footer .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+        
+        .update-modal-footer .btn-close {
+            background: #28a745;
+            color: white;
+        }
+        
+        .update-modal-footer .btn-close:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .update-status {
+            margin-top: 16px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #666;
+            min-height: 20px;
+        }
+
+        .update-status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .update-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
         .app-container {
             flex: 1;
             padding: 24px;
@@ -250,6 +494,31 @@
             width: 100%;
         }
 
+        /* 高级选项复选框样式 */
+        .advanced-option {
+            margin-top: 8px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            user-select: none;
+        }
+
+        .advanced-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .checkmark {
+            position: relative;
+        }
+
         .btn {
             padding: 10px 20px;
             border-radius: 8px;
@@ -276,6 +545,30 @@
             background-color: var(--text-secondary);
             cursor: not-allowed;
             opacity: 0.7;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-secondary.advanced-enabled {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-secondary.advanced-enabled:hover {
+            background-color: #c82333;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
         }
 
         .btn-stop {
@@ -778,6 +1071,18 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
+        .btn-reset {
+            background: linear-gradient(145deg, #ff8c00, #e67e00);
+            color: white;
+            box-shadow: 0 4px 8px rgba(255, 140, 0, 0.3);
+        }
+
+        .btn-reset:hover {
+            background: linear-gradient(145deg, #e67e00, #cc7000);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 140, 0, 0.4);
+        }
+
         .loading-spinner {
             display: inline-block;
             width: 16px;
@@ -985,6 +1290,217 @@
             background: #f8f9fa;
         }
 
+        /* 高级设置对话框样式 */
+        .advanced-modal {
+            display: none;
+            position: fixed;
+            z-index: 1002;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .advanced-modal-content {
+            background: #ffffff;
+            margin: 2% auto;
+            padding: 0;
+            border: 2px solid #333333;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease-out;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .advanced-modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #cccccc;
+            background: #f8f9fa;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .advanced-modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #333333;
+        }
+
+        .advanced-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666666;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .advanced-modal-close:hover {
+            background: #f0f0f0;
+            color: #333333;
+            transform: scale(1.1);
+        }
+
+        .advanced-modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .setting-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .setting-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .setting-section h4 {
+            margin: 0 0 16px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-color);
+            user-select: none;
+        }
+
+        .radio-label input[type="radio"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .radio-mark {
+            position: relative;
+        }
+
+        .download-options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .single-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .multi-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .option-with-dropdown {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .option-with-dropdown .form-select {
+            min-width: 120px;
+            flex-shrink: 0;
+        }
+
+        .multi-checkbox:checked ~ .checkmark {
+            background-color: var(--primary-color);
+        }
+
+        .subtitle-options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .subtitle-lang {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subtitle-lang label {
+            font-size: 14px;
+            color: var(--text-color);
+            white-space: nowrap;
+        }
+
+        .subtitle-extra {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .advanced-modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #cccccc;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .advanced-modal-content {
+                width: 95%;
+                margin: 1% auto;
+                max-height: 95vh;
+            }
+            
+            .option-with-dropdown {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .subtitle-lang {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
         /* 视频播放弹窗样式 */
         .video-modal {
             display: none;
@@ -1176,11 +1692,20 @@
     <header class="app-header">
         <div class="app-title">
             <span class="material-symbols-rounded">smart_display</span>
-            X-KT 视频下载器
+            <span id="appTitle">X-KT 视频下载器</span>
         </div>
-        <div class="status-indicator">
-            <div class="status-dot" id="connectionStatus"></div>
-            <span id="statusText">已连接</span>
+        <div class="header-actions">
+            <div class="version-info" id="versionInfo" style="display: none;">
+                <span class="version-text" id="versionText">检查版本中...</span>
+                <button class="update-btn" id="updateBtn" style="display: none;">
+                    <span class="material-symbols-rounded">system_update</span>
+                    更新
+                </button>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot" id="connectionStatus"></div>
+                <span id="statusText">已连接</span>
+            </div>
         </div>
     </header>
 
@@ -1225,10 +1750,16 @@
                             </select>
                         </div>
                     </div>
-                    <button class="btn btn-primary" id="runButton">
-                        <span class="material-symbols-rounded">play_arrow</span>
-                        运行
-                    </button>
+                    <div class="button-group">
+                        <button class="btn btn-secondary" id="advancedButton">
+                            <span class="material-symbols-rounded">settings</span>
+                            <span class="advanced-text">高级选项（未启用）</span>
+                        </button>
+                        <button class="btn btn-primary" id="runButton">
+                            <span class="material-symbols-rounded">play_arrow</span>
+                            运行
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1362,6 +1893,224 @@
         </div>
     </div>
 
+    <!-- 高级设置对话框 -->
+    <div class="advanced-modal" id="advancedModal">
+        <div class="advanced-modal-content">
+            <div class="advanced-modal-header">
+                <h3>高级设置</h3>
+                <button class="advanced-modal-close" id="advancedModalClose">&times;</button>
+            </div>
+            <div class="advanced-modal-body">
+                <!-- 一、是否启用高级选项 -->
+                <div class="setting-section">
+                    <h4>一、是否启用高级选项</h4>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="enableAdvanced" value="enable" checked>
+                            <span class="radio-mark"></span>
+                            启用
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="enableAdvanced" value="disable">
+                            <span class="radio-mark"></span>
+                            关闭
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 二、下载设置 -->
+                <div class="setting-section">
+                    <h4>二、下载设置</h4>
+                    <div class="download-options">
+                        <!-- 单选选项 -->
+                        <div class="single-options">
+                            <label class="radio-label">
+                                <input type="radio" name="downloadType" value="bestQuality">
+                                <span class="radio-mark"></span>
+                                下载最佳画质
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="downloadType" value="bestAudio">
+                                <span class="radio-mark"></span>
+                                下载最佳音频
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="downloadType" value="bestMerge" checked>
+                                <span class="radio-mark"></span>
+                                下载最佳视频和最佳音频，并合并
+                            </label>
+                        </div>
+                        
+                        <!-- 单选选项 -->
+                        <div class="radio-options">
+                            <div class="option-with-dropdown">
+                                <label class="radio-label">
+                                    <input type="radio" name="separateDownload" value="video" id="separateVideo">
+                                    <span class="radio-mark"></span>
+                                    单独下载视频
+                                </label>
+                                <select id="videoResolution" class="form-select" disabled>
+                                    <option value="4320p">4320p (8K UHD)</option>
+                                    <option value="2160p">2160p (4K UHD)</option>
+                                    <option value="1440p">1440p (2K / QHD)</option>
+                                    <option value="1080p">1080p (Full HD)</option>
+                                    <option value="720p">720p</option>
+                                </select>
+                            </div>
+                            <div class="option-with-dropdown">
+                                <label class="radio-label">
+                                    <input type="radio" name="separateDownload" value="audio" id="separateAudio">
+                                    <span class="radio-mark"></span>
+                                    单独下载音频
+                                </label>
+                                <select id="audioFormat" class="form-select" disabled>
+                                    <option value="default">默认</option>
+                                    <option value="mp3">mp3</option>
+                                    <option value="m4a">m4a</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 三、字幕设置 -->
+                <div class="setting-section">
+                    <h4>三、字幕设置</h4>
+                    <div class="subtitle-options">
+                        <div class="subtitle-lang">
+                            <label for="subtitleLanguage">→ 指定语言：</label>
+                            <select id="subtitleLanguage" class="form-select">
+                                <option value="all" selected>全部</option>
+                                <option value="zh-CN,en">中文+英文</option>
+                                <option value="zh-CN">中文</option>
+                                <option value="en">英文</option>
+                            </select>
+                        </div>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="downloadSubtitle">
+                                <span class="checkmark"></span>
+                                下载字幕（如果有）
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="downloadAutoSubtitle">
+                                <span class="checkmark"></span>
+                                下载自动字幕（机器生成）
+                            </label>
+                        </div>
+                        <div class="subtitle-extra">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="embedSubtitle">
+                                <span class="checkmark"></span>
+                                把字幕嵌入视频文件
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="subtitleOnly">
+                                <span class="checkmark"></span>
+                                只下载字幕，不要视频
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 四、播放列表 -->
+                <div class="setting-section">
+                    <h4>四、播放列表</h4>
+                    <select id="playlistOption" class="form-select">
+                        <option value="default">默认下载整个播放列表</option>
+                        <option value="single">只下载单个视频</option>
+                        <option value="force">强制下载播放列表</option>
+                    </select>
+                </div>
+
+                <!-- 五、常见控制 -->
+                <div class="setting-section">
+                    <h4>五、常见控制</h4>
+                    <div class="control-options">
+                        <div class="option-with-dropdown">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enableThreads">
+                                <span class="checkmark"></span>
+                                开启线程下载
+                            </label>
+                            <select id="threadCount" class="form-select" disabled>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5" selected>5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+                        <div class="option-with-dropdown">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enableRateLimit">
+                                <span class="checkmark"></span>
+                                开启限速
+                            </label>
+                            <select id="rateLimit" class="form-select" disabled>
+                                <option value="1M" selected>1M</option>
+                                <option value="2M">2M</option>
+                                <option value="3M">3M</option>
+                                <option value="4M">4M</option>
+                                <option value="5M">5M</option>
+                                <option value="6M">6M</option>
+                                <option value="7M">7M</option>
+                                <option value="8M">8M</option>
+                                <option value="9M">9M</option>
+                                <option value="10M">10M</option>
+                            </select>
+                        </div>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="continueOnError">
+                            <span class="checkmark"></span>
+                            出错继续（播放列表常用）
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="enableReferer">
+                            <span class="checkmark"></span>
+                            启用 Referer
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="advanced-modal-footer">
+                <button class="btn btn-cancel" id="advancedCancelBtn">关闭</button>
+                <button class="btn btn-reset" id="advancedResetBtn">重置</button>
+                <button class="btn btn-confirm" id="advancedSaveBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 更新进度模态框 -->
+    <div class="update-modal" id="updateModal">
+        <div class="update-modal-content">
+            <div class="update-modal-header">
+                <h3>yt-dlp 更新</h3>
+            </div>
+            <div class="update-modal-body">
+                <div class="update-info" id="updateInfo">
+                    <p id="updateMessage">正在准备更新...</p>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">0%</div>
+                </div>
+                <div class="update-status" id="updateStatus"></div>
+            </div>
+            <div class="update-modal-footer">
+                <button class="btn btn-cancel" id="updateCancelBtn" style="display: none;">取消</button>
+                <button class="btn btn-close" id="updateCloseBtn" style="display: none;">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // DOM 元素
         const logOutput = document.getElementById('logOutput');
@@ -1390,12 +2139,43 @@
         const imageModalTitle = document.getElementById('imageModalTitle');
         const imageModalClose = document.getElementById('imageModalClose');
         const imagePreview = document.getElementById('imagePreview');
+        
+        // 高级设置相关DOM元素
+        const advancedButton = document.getElementById('advancedButton');
+        const advancedModal = document.getElementById('advancedModal');
+        const advancedModalClose = document.getElementById('advancedModalClose');
+        const advancedCancelBtn = document.getElementById('advancedCancelBtn');
+        const advancedSaveBtn = document.getElementById('advancedSaveBtn');
+        
+        // 高级设置选项元素
+        const separateVideoRadio = document.getElementById('separateVideo');
+            const videoResolutionSelect = document.getElementById('videoResolution');
+            const separateAudioRadio = document.getElementById('separateAudio');
+        const audioFormatSelect = document.getElementById('audioFormat');
+        const enableThreadsCheckbox = document.getElementById('enableThreads');
+        const threadCountSelect = document.getElementById('threadCount');
+        const enableRateLimitCheckbox = document.getElementById('enableRateLimit');
+        const rateLimitSelect = document.getElementById('rateLimit');
+        
+        // 版本检查相关DOM元素
+        const versionInfo = document.getElementById('versionInfo');
+        const versionText = document.getElementById('versionText');
+        const updateBtn = document.getElementById('updateBtn');
+        const updateModal = document.getElementById('updateModal');
+        const updateMessage = document.getElementById('updateMessage');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const updateStatus = document.getElementById('updateStatus');
+        const updateCancelBtn = document.getElementById('updateCancelBtn');
+        const updateCloseBtn = document.getElementById('updateCloseBtn');
 
         // 状态变量
         let socket;
         let isRunning = false;
         let hasContent = false;
         let taskID = null;
+        let updateTaskID = null;
+        let isUpdating = false;
         
         // 生成唯一的任务ID
         function generateTaskID() {
@@ -1432,8 +2212,10 @@
                 connectionStatus.classList.remove('offline');
                 statusText.textContent = '已连接';
                 
-                // 生成并注册任务ID
-                taskID = generateTaskID();
+                // 生成并注册任务ID（只有在没有现有taskID时才生成新的）
+                if (!taskID) {
+                    taskID = generateTaskID();
+                }
                 const registerMessage = {
                     type: 'register',
                     taskID: taskID
@@ -1446,6 +2228,33 @@
             socket.onmessage = function(event) {
                 try {
                     const data = JSON.parse(event.data);
+                    
+                    // 检查是否是更新进度消息
+                    if (data.type === 'update_progress') {
+                        console.log('收到更新进度消息:', data);
+                        console.log('当前updateTaskID:', updateTaskID);
+                        console.log('消息中的taskID:', data.taskID);
+                        console.log('taskID类型比较:', typeof data.taskID, 'vs', typeof updateTaskID);
+                        console.log('taskID相等性检查:', data.taskID === updateTaskID);
+                        if (data.taskID === updateTaskID) {
+                            console.log('任务ID匹配，调用updateProgress函数');
+                            updateProgress(data.progress, data.message, data.status);
+                        } else {
+                            console.log('任务ID不匹配，忽略消息');
+                            console.log('期望的taskID:', updateTaskID);
+                            console.log('实际的taskID:', data.taskID);
+                        }
+                        return; // 不显示更新进度消息在日志中
+                    }
+                    
+                    // 检查是否是UPDATE_COMPLETE消息
+                    if (data.message === 'UPDATE_COMPLETE' && data.type === 'complete') {
+                        // 更新完成后自动刷新版本信息
+                        setTimeout(() => {
+                            checkYtDlpVersion();
+                        }, 1000);
+                        return; // 不显示UPDATE_COMPLETE消息
+                    }
                     
                     // 只处理系统消息或属于当前任务ID的消息
                     if (data.type === 'system' || data.taskID === taskID) {
@@ -1605,7 +2414,10 @@
             // 开始运行
             startDownload();
             
-            // 发送运行请求，包含参数和任务ID
+            // 获取当前配置
+            const currentConfig = getCurrentConfig();
+            
+            // 发送运行请求，包含参数、配置和任务ID
             fetch('/run', {
                 method: 'POST',
                 headers: {
@@ -1614,7 +2426,8 @@
                 body: JSON.stringify({
                     platform: platform,
                     url: url,
-                    taskID: taskID
+                    taskID: taskID,
+                    config: currentConfig
                 })
             })
             .then(response => {
@@ -2345,14 +3158,767 @@
                 }
             });
             
-            // 使用事件委托处理复选框变化
-            document.addEventListener('change', function(e) {
+            // 监听视频列表的复选框变化
+            videoList.addEventListener('change', function(e) {
                 if (e.target.type === 'checkbox' && e.target.classList.contains('video-checkbox')) {
                     updateBatchActions();
                 }
             });
+            
+            // 高级设置功能
+            initAdvancedSettings();
+            
+            // 初始化版本检查功能
+            initVersionCheck();
         });
         
+        // 初始化高级设置功能
+        function initAdvancedSettings() {
+            // 高级选项按钮点击事件
+            advancedButton.addEventListener('click', async function() {
+                // 打开对话框前先加载配置
+                await loadConfiguration();
+                advancedModal.style.display = 'block';
+            });
+            
+            // 关闭对话框事件
+            advancedModalClose.addEventListener('click', closeAdvancedModal);
+            advancedCancelBtn.addEventListener('click', closeAdvancedModal);
+            
+            // 保存设置事件
+            advancedSaveBtn.addEventListener('click', saveAdvancedSettings);
+            
+            // 重置设置事件
+            advancedResetBtn.addEventListener('click', resetAdvancedSettings);
+            
+            // 点击对话框外部关闭
+            advancedModal.addEventListener('click', function(e) {
+                if (e.target === advancedModal) {
+                    closeAdvancedModal();
+                }
+            });
+            
+            // ESC键关闭对话框
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && advancedModal.style.display === 'block') {
+                    closeAdvancedModal();
+                }
+            });
+            
+            // 下载设置交互逻辑
+            initDownloadOptionsLogic();
+            
+            // 其他选项交互逻辑
+            initOtherOptionsLogic();
+        }
+        
+        // 初始化下载选项逻辑
+        function initDownloadOptionsLogic() {
+            const downloadTypeRadios = document.querySelectorAll('input[name="downloadType"]');
+            const separateDownloadRadios = document.querySelectorAll('input[name="separateDownload"]');
+            
+            // 监听下载类型单选框变化
+            downloadTypeRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        // 取消单独下载选项
+                        separateDownloadRadios.forEach(separateRadio => {
+                            separateRadio.checked = false;
+                            // 禁用所有单独下载的下拉框
+                            const dropdown = separateRadio.closest('.option-with-dropdown')?.querySelector('.form-select');
+                            if (dropdown) {
+                                dropdown.disabled = true;
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // 监听单独下载单选框变化
+            separateDownloadRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        // 取消下载类型选项
+                        downloadTypeRadios.forEach(downloadRadio => {
+                            downloadRadio.checked = false;
+                        });
+                        
+                        // 更新所有单独下载选项的下拉框状态
+                        separateDownloadRadios.forEach(separateRadio => {
+                            const dropdown = separateRadio.closest('.option-with-dropdown')?.querySelector('.form-select');
+                            if (dropdown) {
+                                dropdown.disabled = !separateRadio.checked;
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // 初始化下拉框状态
+            separateDownloadRadios.forEach(separateRadio => {
+                const dropdown = separateRadio.closest('.option-with-dropdown')?.querySelector('.form-select');
+                if (dropdown) {
+                    dropdown.disabled = !separateRadio.checked;
+                }
+            });
+        }
+        
+        // 初始化其他选项逻辑
+        function initOtherOptionsLogic() {
+            // 线程下载选项
+            enableThreadsCheckbox.addEventListener('change', function() {
+                toggleDropdown(this);
+            });
+            
+            // 限速选项
+            enableRateLimitCheckbox.addEventListener('change', function() {
+                toggleDropdown(this);
+            });
+        }
+        
+        // 切换下拉框启用状态
+        function toggleDropdown(checkbox) {
+            const dropdown = checkbox.closest('.option-with-dropdown')?.querySelector('.form-select');
+            if (dropdown) {
+                dropdown.disabled = !checkbox.checked;
+            }
+        }
+        
+        // 关闭高级设置对话框
+        function closeAdvancedModal() {
+            advancedModal.style.display = 'none';
+        }
+        
+        // 更新主界面高级选项状态
+        function updateAdvancedOptionStatus(isEnabled) {
+            const advancedButton = document.getElementById('advancedButton');
+            const advancedLabel = advancedButton?.querySelector('.advanced-text');
+            
+            if (advancedButton && advancedLabel) {
+                if (isEnabled) {
+                    advancedButton.classList.add('advanced-enabled');
+                    advancedLabel.textContent = '高级选项（已启用）';
+                } else {
+                    advancedButton.classList.remove('advanced-enabled');
+                    advancedLabel.textContent = '高级选项（未启用）';
+                }
+            }
+        }
+        
+        // 从服务器加载配置
+        async function loadConfiguration() {
+            try {
+                const response = await fetch('/api/config/load');
+                if (response.ok) {
+                    const config = await response.json();
+                    applyConfiguration(config);
+                    return config;
+                } else {
+                    console.log('未找到配置文件，使用默认配置');
+                    return null;
+                }
+            } catch (error) {
+                console.error('加载配置失败:', error);
+                return null;
+            }
+        }
+        
+        // 应用配置到界面
+        function applyConfiguration(config) {
+            if (!config) return;
+            
+            // 更新主界面高级选项状态
+            updateAdvancedOptionStatus(config.enableAdvanced);
+            
+            // 应用高级设置
+            if (config.enableAdvanced !== undefined) {
+                const enableRadio = document.querySelector(`input[name="enableAdvanced"][value="${config.enableAdvanced ? 'enable' : 'disable'}"]`);
+                if (enableRadio) enableRadio.checked = true;
+            }
+            
+            if (config.downloadType) {
+                const downloadTypeRadio = document.querySelector(`input[name="downloadType"][value="${config.downloadType}"]`);
+                if (downloadTypeRadio) downloadTypeRadio.checked = true;
+            }
+            
+            if (config.separateDownload) {
+                const separateRadio = document.querySelector(`input[name="separateDownload"][value="${config.separateDownload}"]`);
+                if (separateRadio) separateRadio.checked = true;
+            }
+            
+            if (config.videoResolution && videoResolutionSelect) {
+                videoResolutionSelect.value = config.videoResolution;
+            }
+            
+            if (config.audioFormat && audioFormatSelect) {
+                audioFormatSelect.value = config.audioFormat;
+            }
+            
+            // 字幕设置
+            if (config.downloadSubtitle !== undefined) {
+                const downloadSubtitleEl = document.getElementById('downloadSubtitle');
+                if (downloadSubtitleEl) downloadSubtitleEl.checked = config.downloadSubtitle;
+            }
+            
+            if (config.downloadAutoSubtitle !== undefined) {
+                const downloadAutoSubtitleEl = document.getElementById('downloadAutoSubtitle');
+                if (downloadAutoSubtitleEl) downloadAutoSubtitleEl.checked = config.downloadAutoSubtitle;
+            }
+            
+            if (config.subtitleLanguage) {
+                const subtitleLanguageEl = document.getElementById('subtitleLanguage');
+                if (subtitleLanguageEl) subtitleLanguageEl.value = config.subtitleLanguage;
+            }
+            
+            if (config.embedSubtitle !== undefined) {
+                const embedSubtitleEl = document.getElementById('embedSubtitle');
+                if (embedSubtitleEl) embedSubtitleEl.checked = config.embedSubtitle;
+            }
+            
+            if (config.subtitleOnly !== undefined) {
+                const subtitleOnlyEl = document.getElementById('subtitleOnly');
+                if (subtitleOnlyEl) subtitleOnlyEl.checked = config.subtitleOnly;
+            }
+            
+            // 播放列表设置
+            if (config.playlistStart !== undefined) {
+                const playlistStartEl = document.getElementById('playlistStart');
+                if (playlistStartEl) playlistStartEl.value = config.playlistStart;
+            }
+            
+            if (config.playlistEnd !== undefined) {
+                const playlistEndEl = document.getElementById('playlistEnd');
+                if (playlistEndEl) playlistEndEl.value = config.playlistEnd;
+            }
+            
+            if (config.playlistMode) {
+                const playlistOptionEl = document.getElementById('playlistOption');
+                if (playlistOptionEl) playlistOptionEl.value = config.playlistMode;
+            }
+            
+            // 线程和速率限制设置
+            if (config.enableThreads !== undefined && enableThreadsCheckbox) {
+                enableThreadsCheckbox.checked = config.enableThreads;
+            }
+            
+            if (config.threadCount && threadCountSelect) {
+                threadCountSelect.value = config.threadCount.toString();
+            }
+            
+            if (config.enableRateLimit !== undefined && enableRateLimitCheckbox) {
+                enableRateLimitCheckbox.checked = config.enableRateLimit;
+            }
+            
+            if (config.rateLimit && rateLimitSelect) {
+                rateLimitSelect.value = config.rateLimit;
+            }
+            
+            if (config.continueOnError !== undefined) {
+                const continueOnErrorEl = document.getElementById('continueOnError');
+                if (continueOnErrorEl) continueOnErrorEl.checked = config.continueOnError;
+            }
+            
+            if (config.enableReferer !== undefined) {
+                const enableRefererEl = document.getElementById('enableReferer');
+                if (enableRefererEl) enableRefererEl.checked = config.enableReferer;
+            }
+            
+            // 重新初始化逻辑以确保状态同步
+            initDownloadOptionsLogic();
+            initOtherOptionsLogic();
+        }
+        
+        // 获取当前配置
+        function getCurrentConfig() {
+            const playlistStart = parseInt(document.getElementById('playlistStart')?.value) || 1;
+            const playlistEnd = parseInt(document.getElementById('playlistEnd')?.value) || 0;
+            
+            return {
+                enableAdvanced: document.querySelector('input[name="enableAdvanced"]:checked')?.value === 'enable',
+                downloadType: document.querySelector('input[name="downloadType"]:checked')?.value || 'bestMerge',
+                separateDownload: document.querySelector('input[name="separateDownload"]:checked')?.value || '',
+                videoResolution: videoResolutionSelect?.value || '4320p',
+                audioFormat: audioFormatSelect?.value || 'default',
+                downloadSubtitle: document.getElementById('downloadSubtitle')?.checked || false,
+                downloadAutoSubtitle: document.getElementById('downloadAutoSubtitle')?.checked || false,
+                subtitleLanguage: document.getElementById('subtitleLanguage')?.value || 'all',
+                embedSubtitle: document.getElementById('embedSubtitle')?.checked || false,
+                subtitleOnly: document.getElementById('subtitleOnly')?.checked || false,
+                playlistStart: playlistStart,
+                playlistEnd: playlistEnd,
+                playlistMode: document.getElementById('playlistOption')?.value || 'default',
+                enableThreads: enableThreadsCheckbox?.checked || false,
+                threadCount: parseInt(threadCountSelect?.value) || 5,
+                enableRateLimit: enableRateLimitCheckbox?.checked || false,
+                rateLimit: rateLimitSelect?.value || '1M',
+                continueOnError: document.getElementById('continueOnError')?.checked || false,
+                enableReferer: document.getElementById('enableReferer')?.checked || false
+            };
+        }
+        
+        // 保存高级设置
+        async function saveAdvancedSettings() {
+            // 收集所有设置
+            const settings = getCurrentConfig();
+            
+            try {
+                // 发送配置到服务器
+                const response = await fetch('/api/config/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                if (response.ok) {
+                    // 显示保存成功消息
+                    showMessage('✅ 高级设置已保存', 'success');
+                    
+                    // 更新主界面高级选项状态
+                    updateAdvancedOptionStatus(settings.enableAdvanced);
+                    
+                    // 关闭对话框
+                    closeAdvancedModal();
+                } else {
+                    throw new Error('保存失败');
+                }
+            } catch (error) {
+                console.error('保存配置失败:', error);
+                showMessage('❌ 保存配置失败', 'error');
+            }
+        }
+        
+        // 重置高级设置到默认值
+        function resetAdvancedSettings() {
+            // 重置启用高级选项
+            const disableAdvancedRadio = document.querySelector('input[name="enableAdvanced"][value="disable"]');
+            if (disableAdvancedRadio) disableAdvancedRadio.checked = true;
+            
+            // 重置下载类型
+            const bestMergeRadio = document.querySelector('input[name="downloadType"][value="bestMerge"]');
+            if (bestMergeRadio) bestMergeRadio.checked = true;
+            
+            // 取消其他下载类型选项
+            const bestQualityRadio = document.querySelector('input[name="downloadType"][value="best"]');
+            if (bestQualityRadio) bestQualityRadio.checked = false;
+            const bestAudioRadio = document.querySelector('input[name="downloadType"][value="bestaudio"]');
+            if (bestAudioRadio) bestAudioRadio.checked = false;
+            
+            // 重置分离下载选项
+            const noneRadio = document.querySelector('input[name="separateDownload"][value="none"]');
+            if (noneRadio) noneRadio.checked = true;
+            
+            // 取消其他分离下载选项
+            const videoRadio = document.querySelector('input[name="separateDownload"][value="video"]');
+            if (videoRadio) videoRadio.checked = false;
+            const audioRadio = document.querySelector('input[name="separateDownload"][value="audio"]');
+            if (audioRadio) audioRadio.checked = false;
+            
+            // 重置视频和音频格式
+            if (videoResolutionSelect) videoResolutionSelect.value = '4320p';
+            if (audioFormatSelect) audioFormatSelect.value = 'default';
+            
+            // 重置字幕设置
+            const downloadSubtitle = document.getElementById('downloadSubtitle');
+            if (downloadSubtitle) downloadSubtitle.checked = false;
+            
+            const downloadAutoSubtitle = document.getElementById('downloadAutoSubtitle');
+            if (downloadAutoSubtitle) downloadAutoSubtitle.checked = false;
+            
+            const subtitleLanguage = document.getElementById('subtitleLanguage');
+            if (subtitleLanguage) subtitleLanguage.value = 'all';
+            
+            const embedSubtitle = document.getElementById('embedSubtitle');
+            if (embedSubtitle) embedSubtitle.checked = false;
+            
+            const subtitleOnly = document.getElementById('subtitleOnly');
+            if (subtitleOnly) subtitleOnly.checked = false;
+            
+            // 重置播放列表设置
+            const playlistStart = document.getElementById('playlistStart');
+            if (playlistStart) playlistStart.value = '1';
+            
+            const playlistEnd = document.getElementById('playlistEnd');
+            if (playlistEnd) playlistEnd.value = '0';
+            
+            // 重置线程设置
+            if (enableThreadsCheckbox) enableThreadsCheckbox.checked = false;
+            if (threadCountSelect) threadCountSelect.value = '5';
+            
+            // 重置速率限制
+            if (enableRateLimitCheckbox) enableRateLimitCheckbox.checked = false;
+            if (rateLimitSelect) rateLimitSelect.value = '1M';
+            
+            // 重置其他选项
+            const continueOnError = document.getElementById('continueOnError');
+            if (continueOnError) continueOnError.checked = false;
+            
+            const enableReferer = document.getElementById('enableReferer');
+            if (enableReferer) enableReferer.checked = false;
+            
+            // 重新初始化逻辑以确保状态同步
+            initDownloadOptionsLogic();
+            initOtherOptionsLogic();
+            
+            // 显示重置成功消息
+            showMessage('✅ 设置已重置为默认值', 'success');
+        }
+        
+        // 加载保存的高级设置
+        function loadAdvancedSettings() {
+            const savedSettings = localStorage.getItem('advancedSettings');
+            if (savedSettings) {
+                try {
+                    const settings = JSON.parse(savedSettings);
+                    
+                    // 恢复各种设置
+                    const enableAdvancedRadio = document.querySelector(`input[name="enableAdvanced"][value="${settings.enableAdvanced}"]`);
+                    if (enableAdvancedRadio) enableAdvancedRadio.checked = true;
+                    
+                    const downloadTypeRadio = document.querySelector(`input[name="downloadType"][value="${settings.downloadType}"]`);
+                    if (downloadTypeRadio) downloadTypeRadio.checked = true;
+                    
+                    const separateDownloadRadio = document.querySelector(`input[name="separateDownload"][value="${settings.separateDownload || 'none'}"]`);
+                    if (separateDownloadRadio) separateDownloadRadio.checked = true;
+                    videoResolutionSelect.value = settings.videoResolution || '4320p';
+                    audioFormatSelect.value = settings.audioFormat || 'default';
+                    
+                    document.getElementById('downloadSubtitle').checked = settings.downloadSubtitle || false;
+                    document.getElementById('downloadAutoSubtitle').checked = settings.downloadAutoSubtitle || false;
+                    
+                    document.getElementById('subtitleLanguage').value = settings.subtitleLanguage || 'all';
+                    document.getElementById('embedSubtitle').checked = settings.embedSubtitle || false;
+                    document.getElementById('subtitleOnly').checked = settings.subtitleOnly || false;
+                    
+                    document.getElementById('playlistOption').value = settings.playlistOption || 'default';
+                    
+                    enableThreadsCheckbox.checked = settings.enableThreads || false;
+                    threadCountSelect.value = settings.threadCount || '5';
+                    
+                    enableRateLimitCheckbox.checked = settings.enableRateLimit || false;
+                    rateLimitSelect.value = settings.rateLimit || '1M';
+                    
+                    document.getElementById('continueOnError').checked = settings.continueOnError || false;
+                    document.getElementById('enableReferer').checked = settings.enableReferer || false;
+                    
+                    // 更新单独下载选项的下拉框状态
+                    const allSeparateRadios = document.querySelectorAll('input[name="separateDownload"]');
+                    allSeparateRadios.forEach(radio => {
+                        const dropdown = radio.closest('.option-with-dropdown')?.querySelector('.form-select');
+                        if (dropdown) {
+                            dropdown.disabled = !radio.checked;
+                        }
+                    });
+                    toggleDropdown(enableThreadsCheckbox);
+                    toggleDropdown(enableRateLimitCheckbox);
+                    
+                } catch (e) {
+                    console.error('加载高级设置失败:', e);
+                }
+            }
+        }
+        
+        // 加载应用信息
+        async function loadAppInfo() {
+            try {
+                const response = await fetch('/api/app/info');
+                if (response.ok) {
+                    const appInfo = await response.json();
+                    // 更新浏览器标题
+                    document.title = appInfo.title;
+                    // 更新页面显示的标题
+                    const appTitleElement = document.getElementById('appTitle');
+                    if (appTitleElement) {
+                        appTitleElement.textContent = appInfo.title;
+                    }
+                    console.log('应用信息加载成功:', appInfo);
+                } else {
+                    console.error('获取应用信息失败:', response.status);
+                }
+            } catch (error) {
+                console.error('加载应用信息时出错:', error);
+            }
+        }
+        
+        // 页面加载完成后加载保存的设置
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(loadConfiguration, 100);
+            loadAppInfo(); // 加载应用信息并更新标题
+        });
+        
+        // 初始化版本检查功能
+        function initVersionCheck() {
+            // 页面加载5秒后自动检查版本
+            setTimeout(() => {
+                checkYtDlpVersion();
+            }, 5000);
+            
+            // 更新按钮点击事件
+            if (updateBtn) {
+                updateBtn.addEventListener('click', startUpdate);
+            }
+            
+            // 更新模态框按钮事件
+            if (updateCancelBtn) {
+                updateCancelBtn.addEventListener('click', cancelUpdate);
+            }
+            
+            if (updateCloseBtn) {
+                updateCloseBtn.addEventListener('click', closeUpdateModal);
+            }
+        }
+        
+        // 检查yt-dlp版本
+        async function checkYtDlpVersion() {
+            try {
+                if (versionInfo) {
+                    versionInfo.style.display = 'flex';
+                    versionText.textContent = '检查版本中...';
+                }
+                
+                const response = await fetch('/api/version/check');
+                if (response.ok) {
+                    const versionData = await response.json();
+                    displayVersionInfo(versionData);
+                } else {
+                    console.error('版本检查失败:', response.statusText);
+                    if (versionText) {
+                        versionText.textContent = '版本检查失败';
+                    }
+                }
+            } catch (error) {
+                console.error('版本检查错误:', error);
+                if (versionText) {
+                    versionText.textContent = '版本检查失败';
+                }
+            }
+        }
+        
+        // 显示版本信息
+        function displayVersionInfo(versionData) {
+            if (!versionText) return;
+            
+            if (versionData.hasUpdate) {
+                if (versionData.currentVersion === '未安装') {
+                    versionText.textContent = `yt-dlp 未安装，点击下载最新版本 ${versionData.latestVersion}`;
+                } else {
+                    versionText.textContent = `发现新版本 ${versionData.latestVersion} (当前: ${versionData.currentVersion})`;
+                }
+                versionText.classList.add('has-update');
+                if (updateBtn) {
+                    updateBtn.style.display = 'flex';
+                    updateBtn.textContent = versionData.currentVersion === '未安装' ? '下载' : '更新';
+                }
+            } else {
+                versionText.textContent = `已是最新版本 ${versionData.currentVersion}`;
+                versionText.classList.remove('has-update');
+                if (updateBtn) {
+                    updateBtn.style.display = 'none';
+                }
+            }
+        }
+        
+        // 开始更新
+        async function startUpdate() {
+            if (isUpdating) return;
+            
+            isUpdating = true;
+            updateTaskID = taskID; // 使用已注册的taskID而不是生成新的
+            console.log('使用的updateTaskID:', updateTaskID);
+            
+            // 显示更新模态框
+            if (updateModal) {
+                updateModal.classList.add('show');
+            }
+            
+            // 重置进度
+            resetUpdateProgress();
+            
+            // 根据当前状态设置初始消息
+            const isFirstInstall = versionText && versionText.textContent.includes('未安装');
+            if (updateMessage && isFirstInstall) {
+                updateMessage.textContent = '正在下载yt-dlp...';
+            }
+            
+            try {
+                const response = await fetch('/api/version/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        taskID: updateTaskID
+                    })
+                });
+                
+                if (response.ok) {
+                    // 开始监听更新进度
+                    monitorUpdateProgress();
+                } else {
+                    const errorText = await response.text();
+                    showUpdateError('更新启动失败: ' + errorText);
+                }
+            } catch (error) {
+                console.error('更新请求错误:', error);
+                showUpdateError('更新请求失败: ' + error.message);
+            }
+        }
+        
+        // 监听更新进度
+        function monitorUpdateProgress() {
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                showUpdateError('WebSocket连接未建立，无法监听更新进度');
+                return;
+            }
+            
+            // 不需要重新设置onmessage，因为主WebSocket处理函数会处理所有消息
+            console.log('开始监听更新进度，任务ID:', updateTaskID);
+        }
+        
+        // 更新进度
+        function updateProgress(progress, message, status) {
+            console.log('updateProgress被调用:', { progress, message, status });
+            
+            // 重新获取DOM元素，确保它们存在
+            const currentProgressFill = document.getElementById('progressFill');
+            const currentProgressText = document.getElementById('progressText');
+            const currentUpdateMessage = document.getElementById('updateMessage');
+            const currentUpdateStatus = document.getElementById('updateStatus');
+            
+            console.log('DOM元素状态:', {
+                progressFill: !!currentProgressFill,
+                progressText: !!currentProgressText,
+                updateMessage: !!currentUpdateMessage,
+                updateStatus: !!currentUpdateStatus
+            });
+            
+            if (currentProgressFill) {
+                currentProgressFill.style.width = progress + '%';
+                console.log('进度条宽度已设置为:', progress + '%');
+            } else {
+                console.error('progressFill元素未找到');
+            }
+            
+            if (currentProgressText) {
+                currentProgressText.textContent = progress + '%';
+                console.log('进度文本已设置为:', progress + '%');
+            } else {
+                console.error('progressText元素未找到');
+            }
+            
+            if (currentUpdateMessage && message) {
+                currentUpdateMessage.textContent = message;
+                console.log('更新消息已设置为:', message);
+            }
+            
+            if (currentUpdateStatus && status) {
+                currentUpdateStatus.textContent = status;
+                currentUpdateStatus.className = 'update-status';
+                console.log('状态已设置为:', status);
+            } else if (!currentUpdateStatus) {
+                console.error('updateStatus元素未找到');
+            }
+            
+            // 更新完成
+            if (progress >= 100) {
+                isUpdating = false;
+                if (updateCancelBtn) {
+                    updateCancelBtn.style.display = 'none';
+                }
+                if (updateCloseBtn) {
+                    updateCloseBtn.style.display = 'inline-block';
+                }
+                
+                // 更新成功后重新检查版本
+                setTimeout(() => {
+                    checkYtDlpVersion();
+                }, 2000);
+            }
+        }
+        
+        // 显示更新错误
+        function showUpdateError(errorMessage) {
+            isUpdating = false;
+            
+            if (updateMessage) {
+                updateMessage.textContent = '更新失败';
+            }
+            
+            if (updateStatus) {
+                updateStatus.textContent = errorMessage;
+                updateStatus.className = 'update-status error';
+            }
+            
+            if (updateCancelBtn) {
+                updateCancelBtn.style.display = 'none';
+            }
+            
+            if (updateCloseBtn) {
+                updateCloseBtn.style.display = 'inline-block';
+            }
+        }
+        
+        // 重置更新进度
+        function resetUpdateProgress() {
+            if (progressFill) {
+                progressFill.style.width = '0%';
+            }
+            
+            if (progressText) {
+                progressText.textContent = '0%';
+            }
+            
+            if (updateMessage) {
+                updateMessage.textContent = '正在准备更新...';
+            }
+            
+            if (updateStatus) {
+                updateStatus.textContent = '';
+                updateStatus.className = 'update-status';
+            }
+            
+            if (updateCancelBtn) {
+                updateCancelBtn.style.display = 'inline-block';
+            }
+            
+            if (updateCloseBtn) {
+                updateCloseBtn.style.display = 'none';
+            }
+        }
+        
+        // 取消更新
+        function cancelUpdate() {
+            if (isUpdating && updateTaskID) {
+                // 发送取消更新请求
+                fetch('/api/version/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        taskID: updateTaskID
+                    })
+                }).catch(error => {
+                    console.error('取消更新请求失败:', error);
+                });
+            }
+            
+            isUpdating = false;
+            updateTaskID = null;
+            closeUpdateModal();
+        }
+        
+        // 关闭更新模态框
+        function closeUpdateModal() {
+            if (updateModal) {
+                updateModal.classList.remove('show');
+            }
+            
+            if (!isUpdating) {
+                updateTaskID = null;
+            }
+        }
 
     </script>
 </body>
