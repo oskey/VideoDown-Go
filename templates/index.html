@@ -1703,6 +1703,13 @@
                     更新
                 </button>
             </div>
+            <div class="version-info" id="ffmpegInfo" style="display: none;">
+                <span class="version-text" id="ffmpegText">检查FFmpeg中...</span>
+                <button class="update-btn" id="ffmpegDownloadBtn" style="display: none;">
+                    <span class="material-symbols-rounded">download</span>
+                    下载FFmpeg
+                </button>
+            </div>
             <div class="status-indicator">
                 <div class="status-dot" id="connectionStatus"></div>
                 <span id="statusText">已连接</span>
@@ -2112,6 +2119,31 @@
         </div>
     </div>
 
+    <!-- FFmpeg下载进度模态框 -->
+    <div class="update-modal" id="ffmpegModal">
+        <div class="update-modal-content">
+            <div class="update-modal-header">
+                <h3>FFmpeg 下载</h3>
+            </div>
+            <div class="update-modal-body">
+                <div class="update-info" id="ffmpegUpdateInfo">
+                    <p id="ffmpegUpdateMessage">正在准备下载...</p>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="ffmpegProgressFill"></div>
+                    </div>
+                    <div class="progress-text" id="ffmpegProgressText">0%</div>
+                </div>
+                <div class="update-status" id="ffmpegUpdateStatus"></div>
+            </div>
+            <div class="update-modal-footer">
+                <button class="btn btn-cancel" id="ffmpegCancelBtn" style="display: none;">取消</button>
+                <button class="btn btn-close" id="ffmpegCloseBtn" style="display: none;">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // DOM 元素
         const logOutput = document.getElementById('logOutput');
@@ -2166,9 +2198,21 @@
         const updateMessage = document.getElementById('updateMessage');
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
+        
+        // FFmpeg相关DOM元素
+        const ffmpegInfo = document.getElementById('ffmpegInfo');
+        const ffmpegText = document.getElementById('ffmpegText');
+        const ffmpegDownloadBtn = document.getElementById('ffmpegDownloadBtn');
+        const ffmpegModal = document.getElementById('ffmpegModal');
+        const ffmpegUpdateMessage = document.getElementById('ffmpegUpdateMessage');
+        const ffmpegProgressFill = document.getElementById('ffmpegProgressFill');
+        const ffmpegProgressText = document.getElementById('ffmpegProgressText');
         const updateStatus = document.getElementById('updateStatus');
         const updateCancelBtn = document.getElementById('updateCancelBtn');
         const updateCloseBtn = document.getElementById('updateCloseBtn');
+        const ffmpegUpdateStatus = document.getElementById('ffmpegUpdateStatus');
+        const ffmpegCancelBtn = document.getElementById('ffmpegCancelBtn');
+        const ffmpegCloseBtn = document.getElementById('ffmpegCloseBtn');
 
         // 状态变量
         let socket;
@@ -2177,6 +2221,8 @@
         let taskID = null;
         let updateTaskID = null;
         let isUpdating = false;
+        let ffmpegTaskID = null;
+        let isDownloadingFFmpeg = false;
         
         // 生成唯一的任务ID
         function generateTaskID() {
@@ -2233,17 +2279,35 @@
                     // 检查是否是更新进度消息
                     if (data.type === 'update_progress') {
                         console.log('收到更新进度消息:', data);
-                        console.log('当前updateTaskID:', updateTaskID);
-                        console.log('消息中的taskID:', data.taskID);
-                        console.log('taskID类型比较:', typeof data.taskID, 'vs', typeof updateTaskID);
-                        console.log('taskID相等性检查:', data.taskID === updateTaskID);
+                        
+                        // 检查是否是yt-dlp更新进度
                         if (data.taskID === updateTaskID) {
-                            console.log('任务ID匹配，调用updateProgress函数');
+                            console.log('yt-dlp任务ID匹配，调用updateProgress函数');
                             updateProgress(data.progress, data.message, data.status);
+                        }
+                        // 检查是否是FFmpeg下载进度
+                        else if (data.taskID === ffmpegTaskID) {
+                            console.log('FFmpeg任务ID匹配，调用updateFFmpegProgress函数');
+                            updateFFmpegProgress({
+                                percentage: data.progress,
+                                message: data.message,
+                                status: data.status
+                            });
+                            
+                            // 处理FFmpeg下载完成状态
+                            if (data.status === 'complete') {
+                                isDownloadingFFmpeg = false;
+                                showFFmpegCloseButton();
+                                // 重新检查FFmpeg状态
+                                setTimeout(() => {
+                                    checkFFmpegExists();
+                                }, 1000);
+                            } else if (data.status === 'error' || data.status === 'cancelled') {
+                                isDownloadingFFmpeg = false;
+                                showFFmpegCloseButton();
+                            }
                         } else {
                             console.log('任务ID不匹配，忽略消息');
-                            console.log('期望的taskID:', updateTaskID);
-                            console.log('实际的taskID:', data.taskID);
                         }
                         return; // 不显示更新进度消息在日志中
                     }
@@ -3653,6 +3717,7 @@
             // 页面加载5秒后自动检查版本
             setTimeout(() => {
                 checkYtDlpVersion();
+                checkFFmpegExists();
             }, 5000);
             
             // 更新按钮点击事件
@@ -3667,6 +3732,20 @@
             
             if (updateCloseBtn) {
                 updateCloseBtn.addEventListener('click', closeUpdateModal);
+            }
+            
+            // FFmpeg下载按钮点击事件
+            if (ffmpegDownloadBtn) {
+                ffmpegDownloadBtn.addEventListener('click', startFFmpegDownload);
+            }
+            
+            // FFmpeg模态框按钮事件
+            if (ffmpegCancelBtn) {
+                ffmpegCancelBtn.addEventListener('click', cancelFFmpegDownload);
+            }
+            
+            if (ffmpegCloseBtn) {
+                ffmpegCloseBtn.addEventListener('click', closeFFmpegModal);
             }
         }
         
@@ -3702,7 +3781,7 @@
             
             if (versionData.hasUpdate) {
                 if (versionData.currentVersion === '未安装') {
-                    versionText.textContent = `yt-dlp 未安装，点击下载最新版本 ${versionData.latestVersion}`;
+                    versionText.textContent = `YT-DLP 未安装，点击下载最新版本 ${versionData.latestVersion}`;
                 } else {
                     versionText.textContent = `发现新版本 ${versionData.latestVersion} (当前: ${versionData.currentVersion})`;
                 }
@@ -3712,10 +3791,60 @@
                     updateBtn.textContent = versionData.currentVersion === '未安装' ? '下载' : '更新';
                 }
             } else {
-                versionText.textContent = `已是最新版本 ${versionData.currentVersion}`;
+                versionText.textContent = `YT-DLP 已是最新版本 ${versionData.currentVersion}`;
                 versionText.classList.remove('has-update');
                 if (updateBtn) {
                     updateBtn.style.display = 'none';
+                }
+            }
+        }
+        
+        // 检查FFmpeg是否存在
+        async function checkFFmpegExists() {
+            try {
+                if (ffmpegInfo) {
+                    ffmpegInfo.style.display = 'flex';
+                    ffmpegText.textContent = '检查FFmpeg中...';
+                }
+                
+                const response = await fetch('/api/ffmpeg/check');
+                if (response.ok) {
+                    const ffmpegData = await response.json();
+                    displayFFmpegInfo(ffmpegData);
+                } else {
+                    console.error('FFmpeg检查失败:', response.statusText);
+                    if (ffmpegText) {
+                        ffmpegText.textContent = 'FFmpeg检查失败';
+                    }
+                }
+            } catch (error) {
+                console.error('FFmpeg检查错误:', error);
+                if (ffmpegText) {
+                    ffmpegText.textContent = 'FFmpeg检查失败';
+                }
+            }
+        }
+        
+        // 显示FFmpeg信息
+        function displayFFmpegInfo(ffmpegData) {
+            if (!ffmpegText) return;
+            
+            if (ffmpegData.exists) {
+                if (ffmpegData.version) {
+                    ffmpegText.textContent = `FFmpeg 已安装 (${ffmpegData.version})`;
+                } else {
+                    ffmpegText.textContent = 'FFmpeg 已安装';
+                }
+                ffmpegText.classList.remove('has-update');
+                if (ffmpegDownloadBtn) {
+                    ffmpegDownloadBtn.style.display = 'none';
+                }
+            } else {
+                ffmpegText.textContent = 'FFmpeg 未安装，点击下载';
+                ffmpegText.classList.add('has-update');
+                if (ffmpegDownloadBtn) {
+                    ffmpegDownloadBtn.style.display = 'flex';
+                    ffmpegDownloadBtn.textContent = '下载';
                 }
             }
         }
@@ -3918,6 +4047,149 @@
             
             if (!isUpdating) {
                 updateTaskID = null;
+            }
+        }
+        
+        // 开始FFmpeg下载
+        async function startFFmpegDownload() {
+            if (isDownloadingFFmpeg) return;
+            
+            isDownloadingFFmpeg = true;
+            ffmpegTaskID = taskID; // 使用已注册的taskID而不是生成新的
+            console.log('使用的ffmpegTaskID:', ffmpegTaskID);
+            
+            // 显示FFmpeg下载模态框
+            if (ffmpegModal) {
+                ffmpegModal.classList.add('show');
+            }
+            
+            // 重置进度
+            resetFFmpegProgress();
+            
+            // 设置初始消息
+            if (ffmpegUpdateMessage) {
+                ffmpegUpdateMessage.textContent = '正在准备下载FFmpeg...';
+            }
+            
+            // 显示取消按钮
+            if (ffmpegCancelBtn) {
+                ffmpegCancelBtn.style.display = 'inline-block';
+            }
+            
+            try {
+                const response = await fetch('/api/ffmpeg/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        taskID: ffmpegTaskID
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        // 开始监控下载进度
+                        monitorFFmpegProgress();
+                    } else {
+                        throw new Error(result.error || '下载启动失败');
+                    }
+                } else {
+                    throw new Error('下载请求失败');
+                }
+            } catch (error) {
+                console.error('FFmpeg下载错误:', error);
+                if (ffmpegUpdateMessage) {
+                    ffmpegUpdateMessage.textContent = '下载失败: ' + error.message;
+                }
+                isDownloadingFFmpeg = false;
+                showFFmpegCloseButton();
+            }
+        }
+        
+        // 重置FFmpeg进度
+        function resetFFmpegProgress() {
+            if (ffmpegProgressFill) {
+                ffmpegProgressFill.style.width = '0%';
+            }
+            if (ffmpegProgressText) {
+                ffmpegProgressText.textContent = '0%';
+            }
+            if (ffmpegUpdateStatus) {
+                ffmpegUpdateStatus.textContent = '';
+            }
+            if (ffmpegCancelBtn) {
+                ffmpegCancelBtn.style.display = 'none';
+            }
+            if (ffmpegCloseBtn) {
+                ffmpegCloseBtn.style.display = 'none';
+            }
+        }
+        
+        // 监控FFmpeg下载进度
+        function monitorFFmpegProgress() {
+            // FFmpeg进度现在通过WebSocket实时接收，不需要轮询
+            // 这个函数保留为空，进度更新由WebSocket消息处理
+            console.log('FFmpeg进度监控已启动，通过WebSocket接收更新');
+        }
+        
+        // 更新FFmpeg进度显示
+        function updateFFmpegProgress(progress) {
+            if (ffmpegProgressFill && progress.percentage !== undefined) {
+                ffmpegProgressFill.style.width = progress.percentage + '%';
+            }
+            if (ffmpegProgressText && progress.percentage !== undefined) {
+                ffmpegProgressText.textContent = Math.round(progress.percentage) + '%';
+            }
+            if (ffmpegUpdateMessage && progress.message) {
+                ffmpegUpdateMessage.textContent = progress.message;
+            }
+            if (ffmpegUpdateStatus && progress.details) {
+                ffmpegUpdateStatus.textContent = progress.details;
+            }
+        }
+        
+        // 显示FFmpeg关闭按钮
+        function showFFmpegCloseButton() {
+            if (ffmpegCancelBtn) {
+                ffmpegCancelBtn.style.display = 'none';
+            }
+            if (ffmpegCloseBtn) {
+                ffmpegCloseBtn.style.display = 'inline-block';
+            }
+        }
+        
+        // 取消FFmpeg下载
+        function cancelFFmpegDownload() {
+            if (isDownloadingFFmpeg && ffmpegTaskID) {
+                // 发送取消下载请求
+                fetch('/api/ffmpeg/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        taskID: ffmpegTaskID
+                    })
+                }).catch(error => {
+                    console.error('取消FFmpeg下载请求失败:', error);
+                });
+            }
+            
+            isDownloadingFFmpeg = false;
+            ffmpegTaskID = null;
+            closeFFmpegModal();
+        }
+        
+        // 关闭FFmpeg模态框
+        function closeFFmpegModal() {
+            if (ffmpegModal) {
+                ffmpegModal.classList.remove('show');
+            }
+            
+            if (!isDownloadingFFmpeg) {
+                ffmpegTaskID = null;
             }
         }
 

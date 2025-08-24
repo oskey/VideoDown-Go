@@ -31,18 +31,23 @@ if [ $? -ne 0 ]; then
 fi
 echo
 
-# 构建 Windows 版本
-echo "构建 Windows 64位 版本..."
-GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o "build/VideoDown-Go-windows-amd64.exe" main.go
-if [ $? -ne 0 ]; then
-    echo "错误: Windows 版本构建失败"
-    exit 1
+# 读取版本号
+if [ -f "version.txt" ]; then
+    version=$(cat version.txt)
+    echo "版本号: $version"
+else
+    echo "警告: 未找到 version.txt 文件，使用默认版本号"
+    version="V1.0.0"
 fi
-echo "Windows 64位版本构建完成"
+
+# 提取数字版本号（去除V前缀）
+numeric_version=${version#V}
+echo "数字版本号: $numeric_version"
+echo
 
 # 构建 Linux 版本
 echo "构建 Linux 64位 版本..."
-GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o "build/VideoDown-Go-linux-amd64" main.go
+GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.Version=$version" -o "build/VideoDown-Go-linux-amd64" main.go
 if [ $? -ne 0 ]; then
     echo "错误: Linux 版本构建失败"
     exit 1
@@ -51,7 +56,7 @@ echo "Linux 64位版本构建完成"
 
 # 构建 macOS 版本
 echo "构建 macOS 64位 版本..."
-GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o "build/VideoDown-Go-darwin-amd64" main.go
+GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w -X main.Version=$version" -o "build/VideoDown-Go-darwin-amd64" main.go
 if [ $? -ne 0 ]; then
     echo "错误: macOS 版本构建失败"
     exit 1
@@ -60,7 +65,7 @@ echo "macOS 64位版本构建完成"
 
 # 构建 macOS ARM64 版本 (Apple Silicon)
 echo "构建 macOS ARM64 版本..."
-GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o "build/VideoDown-Go-darwin-arm64" main.go
+GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w -X main.Version=$version" -o "build/VideoDown-Go-darwin-arm64" main.go
 if [ $? -ne 0 ]; then
     echo "错误: macOS ARM64 版本构建失败"
     exit 1

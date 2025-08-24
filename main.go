@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/zip"
 	"bufio"
 	"context"
 	"encoding/json"
@@ -14,6 +15,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -27,6 +29,19 @@ import (
 var (
 	Version = "V1.0.0" // 默认版本号，可通过 -ldflags 覆盖
 )
+
+// 获取可执行文件路径（统一处理，不区分操作系统）
+func getExecutablePath(baseName string) string {
+	if isWindows() {
+		return filepath.Join("bin", baseName+".exe")
+	}
+	return filepath.Join("bin", baseName)
+}
+
+// 检查是否为Windows系统（保留用于文件下载时的区分）
+func isWindows() bool {
+	return runtime.GOOS == "windows"
+}
 
 // 应用信息结构体
 type AppInfo struct {
@@ -99,8 +114,21 @@ type VersionInfo struct {
 	DownloadURL    string `json:"downloadURL"`
 }
 
+// FFmpeg信息结构体
+type FFmpegInfo struct {
+	Exists        bool   `json:"exists"`
+	Version       string `json:"version"`
+	NeedsDownload bool   `json:"needsDownload"`
+	DownloadURL   string `json:"downloadURL"`
+}
+
 // 更新请求结构体
 type UpdateRequest struct {
+	TaskID string `json:"taskID"`
+}
+
+// FFmpeg下载请求结构体
+type FFmpegDownloadRequest struct {
 	TaskID string `json:"taskID"`
 }
 
@@ -195,13 +223,20 @@ func main() {
 	http.HandleFunc("/api/config/load", handleConfigLoad)
 	http.HandleFunc("/api/version/check", handleVersionCheck)
 	http.HandleFunc("/api/version/update", handleVersionUpdate)
+	http.HandleFunc("/api/ffmpeg/check", handleFFmpegCheck)
+	http.HandleFunc("/api/ffmpeg/download", handleFFmpegDownload)
+	http.HandleFunc("/api/ffmpeg/cancel", handleFFmpegCancel)
 	http.HandleFunc("/api/version/cancel", handleVersionCancel)
 	http.HandleFunc("/api/app/info", handleAppInfo)
 
 	// 启动服务器
-	port := "8889"
-	log.Printf("服务器启动在 http://127.0.0.1:%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	port := "8888"
+	addr := "0.0.0.0:" + port
+	log.Printf("服务器启动在以下地址:")
+	log.Printf("  - http://127.0.0.1:%s", port)
+	log.Printf("  - http://localhost:%s", port)
+	log.Printf("  - http://[本机IP]:%s (如果防火墙允许)", port)
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 // 处理主页请求
@@ -478,8 +513,8 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 
 	// 在后台运行yt-dlp
 	go func() {
-		// 获取当前工作目录的绝对路径
-		execPath := "./bin/yt-dlp.exe" // 使用相对路径，但确保在正确的工作目录中执行
+		// 根据操作系统获取yt-dlp可执行文件路径
+		execPath := getExecutablePath("yt-dlp")
 
 		// 根据是否启用高级选项构建命令参数
 		var args []string
@@ -645,7 +680,7 @@ func handleThumbnail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 使用FFmpeg生成预览图，保持宽高比
-	ffmpegPath := filepath.Join("bin", "ffmpeg.exe")
+	ffmpegPath := getExecutablePath("ffmpeg")
 	cmd := exec.Command(ffmpegPath, "-i", filePath, "-ss", "00:00:05", "-vframes", "1", "-vf", "scale='min(320,iw)':-1", "-y", thumbnailPath)
 
 	if err := cmd.Run(); err != nil {
@@ -1139,7 +1174,7 @@ func buildCommandArgs(platform, url string) []string {
 			args = append(args, "--referer", referer)
 		}
 		args = append(args, "--newline") // 强制每行输出后换行
-		args = append(args, url) // 添加URL到最后
+		args = append(args, url)         // 添加URL到最后
 	case "generic2":
 		// 其他通用2
 		referer := extractReferer(url)
@@ -1151,7 +1186,7 @@ func buildCommandArgs(platform, url string) []string {
 			args = append(args, "--referer", referer)
 		}
 		args = append(args, "--newline") // 强制每行输出后换行
-		args = append(args, url) // 添加URL到最后
+		args = append(args, url)         // 添加URL到最后
 	default:
 		// 默认情况
 		args = []string{
@@ -1243,7 +1278,7 @@ func buildAdvancedCommandArgs(config Config, url string) []string {
 		if config.PlaylistEnd > 0 {
 			args = append(args, "--playlist-end", fmt.Sprintf("%d", config.PlaylistEnd))
 		}
-	// 默认情况（"default"或"all"）：不添加任何参数，下载整个播放列表
+		// 默认情况（"default"或"all"）：不添加任何参数，下载整个播放列表
 	}
 
 	// 常见控制参数
@@ -1292,13 +1327,52 @@ func extractHeightFromResolution(resolution string) string {
 
 // 获取yt-dlp当前版本
 func getCurrentYtDlpVersion() (string, error) {
-	execPath := "./bin/yt-dlp.exe"
+	execPath := getExecutablePath("yt-dlp")
 	cmd := exec.Command(execPath, "--version")
 	output, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("获取yt-dlp版本失败: %v", err)
 	}
 	return strings.TrimSpace(string(output)), nil
+}
+
+// 获取FFmpeg当前版本
+func getCurrentFFmpegVersion() (string, error) {
+	execPath := getExecutablePath("ffmpeg")
+	cmd := exec.Command(execPath, "-version")
+	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("获取FFmpeg版本失败: %v", err)
+	}
+	// FFmpeg版本输出格式: "ffmpeg version N-109462-g6096a1a409 Copyright (c) 2000-2023 the FFmpeg developers"
+	// 提取版本号
+	lines := strings.Split(string(output), "\n")
+	if len(lines) > 0 {
+		firstLine := lines[0]
+		if strings.Contains(firstLine, "ffmpeg version") {
+			parts := strings.Fields(firstLine)
+			if len(parts) >= 3 {
+				return parts[2], nil
+			}
+		}
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+// 检查FFmpeg是否存在
+func checkFFmpegExists() bool {
+	execPath := getExecutablePath("ffmpeg")
+	_, err := os.Stat(execPath)
+	return err == nil
+}
+
+// 获取FFmpeg下载URL
+func getFFmpegDownloadURL() string {
+	if isWindows() {
+		return "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+	} else {
+		return "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz"
+	}
 }
 
 // 获取yt-dlp最新版本信息
@@ -1321,20 +1395,180 @@ func getLatestYtDlpVersion() (string, string, error) {
 		return "", "", fmt.Errorf("解析版本信息失败: %v", err)
 	}
 
-	// 查找Windows可执行文件
+	// 根据操作系统查找对应的可执行文件
 	var downloadURL string
+	var targetFileName string
+
+	if isWindows() {
+		targetFileName = "yt-dlp.exe"
+	} else {
+		targetFileName = "yt-dlp"
+	}
+
 	for _, asset := range release.Assets {
-		if asset.Name == "yt-dlp.exe" {
+		if asset.Name == targetFileName {
 			downloadURL = asset.BrowserDownloadURL
 			break
 		}
 	}
 
 	if downloadURL == "" {
-		return "", "", fmt.Errorf("未找到Windows版本下载链接")
+		return "", "", fmt.Errorf("未找到%s版本下载链接", runtime.GOOS)
 	}
 
 	return release.TagName, downloadURL, nil
+}
+
+// 处理FFmpeg检查请求
+func handleFFmpegCheck(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "只允许GET请求", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	// 检查FFmpeg是否存在
+	exists := checkFFmpegExists()
+	var version string
+	if exists {
+		if v, err := getCurrentFFmpegVersion(); err == nil {
+			version = v
+		}
+	}
+
+	ffmpegInfo := FFmpegInfo{
+		Exists:        exists,
+		Version:       version,
+		NeedsDownload: !exists,
+		DownloadURL:   getFFmpegDownloadURL(),
+	}
+
+	json.NewEncoder(w).Encode(ffmpegInfo)
+}
+
+// 处理FFmpeg下载请求
+func handleFFmpegDownload(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req FFmpegDownloadRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Error decoding FFmpeg download request: %v", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.TaskID == "" {
+		http.Error(w, "TaskID is required", http.StatusBadRequest)
+		return
+	}
+
+	// 检查是否已经存在
+	if checkFFmpegExists() {
+		sendUpdateProgress(req.TaskID, 100, "FFmpeg already exists", "complete")
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"message": "FFmpeg already exists",
+		})
+		return
+	}
+
+	go func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		updateTasksMu.Lock()
+		updateTasks[req.TaskID] = cancel
+		updateTasksMu.Unlock()
+
+		defer func() {
+			updateTasksMu.Lock()
+			delete(updateTasks, req.TaskID)
+			updateTasksMu.Unlock()
+		}()
+
+		downloadURL := getFFmpegDownloadURL()
+		log.Printf("Starting FFmpeg download from: %s", downloadURL)
+		sendUpdateProgress(req.TaskID, 0, "Starting FFmpeg download...", "progress")
+
+		// 下载FFmpeg zip文件
+		zipPath, err := downloadFFmpeg(downloadURL, req.TaskID, ctx)
+		if err != nil {
+			if ctx.Err() == context.Canceled {
+				sendUpdateProgress(req.TaskID, 0, "Download cancelled", "cancelled")
+			} else {
+				log.Printf("Error downloading FFmpeg: %v", err)
+				sendUpdateProgress(req.TaskID, 0, fmt.Sprintf("Download failed: %v", err), "error")
+			}
+			return
+		}
+
+		if ctx.Err() == context.Canceled {
+			sendUpdateProgress(req.TaskID, 0, "Download cancelled", "cancelled")
+			return
+		}
+
+		sendUpdateProgress(req.TaskID, 80, "Extracting FFmpeg...", "progress")
+
+		// 解压并安装FFmpeg
+		err = extractAndInstallFFmpeg(zipPath, req.TaskID)
+		if err != nil {
+			log.Printf("Error extracting FFmpeg: %v", err)
+			sendUpdateProgress(req.TaskID, 0, fmt.Sprintf("Extraction failed: %v", err), "error")
+			return
+		}
+
+		// 清理临时文件
+		os.Remove(zipPath)
+
+		sendUpdateProgress(req.TaskID, 100, "FFmpeg download completed successfully!", "complete")
+		log.Println("FFmpeg download completed successfully")
+	}()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "FFmpeg download started",
+	})
+}
+
+// 处理FFmpeg取消下载请求
+func handleFFmpegCancel(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req FFmpegDownloadRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Error decoding FFmpeg cancel request: %v", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.TaskID == "" {
+		http.Error(w, "TaskID is required", http.StatusBadRequest)
+		return
+	}
+
+	updateTasksMu.Lock()
+	cancel, exists := updateTasks[req.TaskID]
+	if exists {
+		cancel()
+		delete(updateTasks, req.TaskID)
+	}
+	updateTasksMu.Unlock()
+
+	if exists {
+		log.Printf("FFmpeg download task %s cancelled", req.TaskID)
+		sendUpdateProgress(req.TaskID, 0, "Download cancelled by user", "cancelled")
+	} else {
+		log.Printf("FFmpeg download task %s not found or already completed", req.TaskID)
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 // 处理版本检查请求
@@ -1357,7 +1591,7 @@ func handleVersionCheck(w http.ResponseWriter, r *http.Request) {
 	// 获取当前版本
 	currentVersion, err := getCurrentYtDlpVersion()
 	var versionInfo VersionInfo
-	
+
 	if err != nil {
 		// 如果获取当前版本失败（通常是文件不存在），提示下载最新版本
 		log.Printf("获取当前版本失败: %v", err)
@@ -1402,12 +1636,12 @@ func handleVersionUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// 创建可取消的context
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// 将取消函数存储到全局map中
 	updateTasksMu.Lock()
 	updateTasks[req.TaskID] = cancel
 	updateTasksMu.Unlock()
-	
+
 	// 在后台执行更新
 	go func() {
 		defer func() {
@@ -1416,10 +1650,10 @@ func handleVersionUpdate(w http.ResponseWriter, r *http.Request) {
 			delete(updateTasks, req.TaskID)
 			updateTasksMu.Unlock()
 		}()
-		
+
 		// 发送开始更新消息
 		sendUpdateProgress(req.TaskID, 0, "开始更新yt-dlp...", "正在准备更新")
-		
+
 		// 检查是否已取消
 		select {
 		case <-ctx.Done():
@@ -1446,7 +1680,12 @@ func handleVersionUpdate(w http.ResponseWriter, r *http.Request) {
 		defer resp.Body.Close()
 
 		// 创建临时文件
-		tempFile := "./bin/yt-dlp.exe.new"
+		var tempFile string
+		if isWindows() {
+			tempFile = filepath.Join("bin", "yt-dlp.exe.new")
+		} else {
+			tempFile = filepath.Join("bin", "yt-dlp.new")
+		}
 		file, err := os.Create(tempFile)
 		if err != nil {
 			sendUpdateProgress(req.TaskID, 0, "更新失败", fmt.Sprintf("创建临时文件失败: %v", err))
@@ -1468,7 +1707,7 @@ func handleVersionUpdate(w http.ResponseWriter, r *http.Request) {
 				return
 			default:
 			}
-			
+
 			n, err := resp.Body.Read(buffer)
 			if n > 0 {
 				file.Write(buffer[:n])
@@ -1491,7 +1730,7 @@ func handleVersionUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 
 		sendUpdateProgress(req.TaskID, 95, "下载完成，准备替换文件...", "正在安装新版本")
-		
+
 		// 检查是否已取消
 		select {
 		case <-ctx.Done():
@@ -1519,8 +1758,13 @@ func handleVersionUpdate(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(2 * time.Second)
 
 		// 备份当前版本
-		backupFile := "./bin/yt-dlp.exe.backup"
-		originalFile := "./bin/yt-dlp.exe"
+		var originalFile string
+		if isWindows() {
+			originalFile = filepath.Join("bin", "yt-dlp.exe")
+		} else {
+			originalFile = filepath.Join("bin", "yt-dlp")
+		}
+		backupFile := originalFile + ".backup"
 
 		if _, err := os.Stat(originalFile); err == nil {
 			if err := os.Rename(originalFile, backupFile); err != nil {
@@ -1631,6 +1875,235 @@ func stopAllTasks() {
 }
 
 // 下载yt-dlp文件
+func downloadFFmpeg(downloadURL, taskID string, ctx context.Context) (string, error) {
+	// 创建临时文件
+	tempFile, err := os.CreateTemp("", "ffmpeg-*.zip")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp file: %v", err)
+	}
+	defer tempFile.Close()
+
+	// 创建HTTP请求
+	req, err := http.NewRequestWithContext(ctx, "GET", downloadURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %v", err)
+	}
+
+	// 发送请求
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to download: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	// 获取文件大小
+	contentLength := resp.ContentLength
+	var downloaded int64
+
+	// 创建进度读取器
+	buffer := make([]byte, 32*1024) // 32KB buffer
+	for {
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		default:
+		}
+
+		n, err := resp.Body.Read(buffer)
+		if n > 0 {
+			_, writeErr := tempFile.Write(buffer[:n])
+			if writeErr != nil {
+				return "", fmt.Errorf("failed to write to temp file: %v", writeErr)
+			}
+			downloaded += int64(n)
+
+			// 计算并发送进度
+			if contentLength > 0 {
+				progress := int((downloaded * 70) / contentLength) // 70% for download
+				sendUpdateProgress(taskID, progress, fmt.Sprintf("Downloading FFmpeg... %d%%", progress), "progress")
+			}
+		}
+
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return "", fmt.Errorf("failed to read response: %v", err)
+		}
+	}
+
+	return tempFile.Name(), nil
+}
+
+func extractAndInstallFFmpeg(archivePath, taskID string) error {
+	// 确保bin目录存在
+	binDir := "bin"
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		return fmt.Errorf("failed to create bin directory: %v", err)
+	}
+
+	sendUpdateProgress(taskID, 85, "Extracting FFmpeg...", "progress")
+
+	// 根据操作系统选择不同的解压方式
+	if isWindows() {
+		return extractZipFFmpeg(archivePath, taskID, binDir)
+	} else {
+		return extractTarXzFFmpeg(archivePath, taskID, binDir)
+	}
+}
+
+func extractZipFFmpeg(zipPath, taskID, binDir string) error {
+	// 打开zip文件
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return fmt.Errorf("failed to open zip file: %v", err)
+	}
+	defer r.Close()
+
+	// 查找zip包中的bin目录下的所有文件
+	var binFiles []*zip.File
+	for _, f := range r.File {
+		// 检查文件是否在bin目录下（支持不同的路径格式）
+		if strings.Contains(f.Name, "/bin/") || strings.Contains(f.Name, "\\bin\\") {
+			// 获取bin目录后的文件名
+			var fileName string
+			if idx := strings.LastIndex(f.Name, "/bin/"); idx != -1 {
+				fileName = f.Name[idx+5:] // 跳过"/bin/"
+			} else if idx := strings.LastIndex(f.Name, "\\bin\\"); idx != -1 {
+				fileName = f.Name[idx+5:] // 跳过"\\bin\\"
+			}
+			
+			// 跳过目录条目和空文件名
+			if fileName != "" && !f.FileInfo().IsDir() {
+				binFiles = append(binFiles, f)
+			}
+		}
+	}
+
+	// 如果没有找到bin目录，尝试查找根目录下的exe文件
+	if len(binFiles) == 0 {
+		for _, f := range r.File {
+			if strings.HasSuffix(strings.ToLower(f.Name), ".exe") && !strings.Contains(f.Name, "/") && !strings.Contains(f.Name, "\\") {
+				binFiles = append(binFiles, f)
+			}
+		}
+	}
+
+	if len(binFiles) == 0 {
+		return fmt.Errorf("no executable files found in zip file")
+	}
+
+	// 解压所有找到的文件
+	for i, f := range binFiles {
+		// 获取文件名
+		var fileName string
+		if idx := strings.LastIndex(f.Name, "/"); idx != -1 {
+			fileName = f.Name[idx+1:]
+		} else if idx := strings.LastIndex(f.Name, "\\"); idx != -1 {
+			fileName = f.Name[idx+1:]
+		} else {
+			fileName = f.Name
+		}
+
+		sendUpdateProgress(taskID, 85+i*5, fmt.Sprintf("Extracting %s...", fileName), "progress")
+
+		// 打开zip中的文件
+		rc, err := f.Open()
+		if err != nil {
+			return fmt.Errorf("failed to open %s from zip: %v", fileName, err)
+		}
+
+		// 创建目标文件
+		targetPath := filepath.Join(binDir, fileName)
+		outFile, err := os.Create(targetPath)
+		if err != nil {
+			rc.Close()
+			return fmt.Errorf("failed to create %s: %v", fileName, err)
+		}
+
+		// 复制文件内容
+		_, err = io.Copy(outFile, rc)
+		rc.Close()
+		outFile.Close()
+		if err != nil {
+			return fmt.Errorf("failed to extract %s: %v", fileName, err)
+		}
+
+		// 设置执行权限
+		if err := os.Chmod(targetPath, 0755); err != nil {
+			log.Printf("Warning: failed to set permissions on %s: %v", fileName, err)
+		}
+	}
+
+	sendUpdateProgress(taskID, 95, "Setting permissions...", "progress")
+
+	return nil
+}
+
+func extractTarXzFFmpeg(tarXzPath, taskID, binDir string) error {
+	// 使用系统命令解压tar.xz文件
+	cmd := exec.Command("tar", "-xJf", tarXzPath, "-C", ".")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to extract tar.xz file: %v, output: %s", err, string(output))
+	}
+
+	sendUpdateProgress(taskID, 90, "Finding FFmpeg executable...", "progress")
+
+	// 查找解压后的ffmpeg可执行文件
+	var ffmpegPath string
+	err = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// 查找名为ffmpeg的可执行文件
+		if info.Name() == "ffmpeg" && !info.IsDir() {
+			// 检查是否有执行权限
+			if info.Mode()&0111 != 0 {
+				ffmpegPath = path
+				return filepath.SkipDir // 找到后停止搜索
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("error searching for ffmpeg: %v", err)
+	}
+
+	if ffmpegPath == "" {
+		return fmt.Errorf("ffmpeg executable not found in extracted files")
+	}
+
+	sendUpdateProgress(taskID, 95, "Installing FFmpeg...", "progress")
+
+	// 将ffmpeg复制到bin目录
+	targetPath := filepath.Join(binDir, "ffmpeg")
+	err = copyFile(ffmpegPath, targetPath)
+	if err != nil {
+		return fmt.Errorf("failed to copy ffmpeg to bin directory: %v", err)
+	}
+
+	// 设置执行权限
+	if err := os.Chmod(targetPath, 0755); err != nil {
+		return fmt.Errorf("failed to set permissions on ffmpeg: %v", err)
+	}
+
+	// 清理临时解压的文件
+	go func() {
+		// 删除解压出来的临时目录
+		if dir := filepath.Dir(ffmpegPath); dir != "." && dir != "bin" {
+			os.RemoveAll(dir)
+		}
+	}()
+
+	return nil
+}
+
 func downloadYtDlp(downloadURL, taskID string) (string, error) {
 	resp, err := http.Get(downloadURL)
 	if err != nil {
@@ -1643,7 +2116,13 @@ func downloadYtDlp(downloadURL, taskID string) (string, error) {
 	}
 
 	// 创建临时文件
-	tempFile, err := os.CreateTemp("", "yt-dlp-*.exe")
+	var tempFilePattern string
+	if isWindows() {
+		tempFilePattern = "yt-dlp-*.exe"
+	} else {
+		tempFilePattern = "yt-dlp-*"
+	}
+	tempFile, err := os.CreateTemp("", tempFilePattern)
 	if err != nil {
 		return "", err
 	}
@@ -1729,7 +2208,7 @@ func handleAppInfo(w http.ResponseWriter, r *http.Request) {
 
 	// 从文件读取版本号
 	version := readVersionFromFile()
-	
+
 	// 构建应用标题
 	title := fmt.Sprintf("X-KT 视频下载器 %s", version)
 
