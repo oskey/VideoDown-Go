@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 echo ========================================
-echo VideoDown-Go Build Script
+echo VideoDown-Go Simple Build Script
 echo ========================================
 echo.
 
@@ -34,7 +34,7 @@ if %errorlevel% neq 0 (
 )
 echo.
 
-:: Build Windows version
+:: Build Windows version only
 echo Building Windows 64-bit version...
 set GOOS=windows
 set GOARCH=amd64
@@ -45,40 +45,6 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 echo Windows 64-bit version build completed
-
-:: Build Linux version
-echo Building Linux 64-bit version...
-set GOOS=linux
-set GOARCH=amd64
-go build -ldflags "-s -w" -o "build/VideoDown-Go-linux-amd64" main.go
-if %errorlevel% neq 0 (
-    echo Error: Linux build failed
-    pause
-    exit /b 1
-)
-echo Linux 64-bit version build completed
-
-:: Build macOS version (skip if fails)
-echo Building macOS 64-bit version...
-set GOOS=darwin
-set GOARCH=amd64
-go build -ldflags "-s -w" -o "build/VideoDown-Go-darwin-amd64" main.go
-if %errorlevel% neq 0 (
-    echo Warning: macOS build failed, skipping...
-) else (
-    echo macOS 64-bit version build completed
-)
-
-:: Build macOS ARM64 version (skip if fails)
-echo Building macOS ARM64 version...
-set GOOS=darwin
-set GOARCH=arm64
-go build -ldflags "-s -w" -o "build/VideoDown-Go-darwin-arm64" main.go
-if %errorlevel% neq 0 (
-    echo Warning: macOS ARM64 build failed, skipping...
-) else (
-    echo macOS ARM64 version build completed
-)
 
 :: Copy necessary files
 echo Copying project files...
@@ -99,12 +65,6 @@ echo - ffplay.exe >> "build/bin/README.txt"
 echo - ffprobe.exe >> "build/bin/README.txt"
 echo - yt-dlp.exe >> "build/bin/README.txt"
 echo. >> "build/bin/README.txt"
-echo macOS/Linux: >> "build/bin/README.txt"
-echo - ffmpeg >> "build/bin/README.txt"
-echo - ffplay >> "build/bin/README.txt"
-echo - ffprobe >> "build/bin/README.txt"
-echo - yt-dlp >> "build/bin/README.txt"
-echo. >> "build/bin/README.txt"
 echo Download links: >> "build/bin/README.txt"
 echo FFmpeg: https://ffmpeg.org/download.html >> "build/bin/README.txt"
 echo yt-dlp: https://github.com/yt-dlp/yt-dlp/releases >> "build/bin/README.txt"
@@ -119,9 +79,10 @@ echo Build files location: build/
 dir "build" /B
 echo.
 echo Notes:
-echo 1. Users need to download FFmpeg and yt-dlp tools manually
-echo 2. Place tools in the bin/ directory
-echo 3. See install.md for detailed installation instructions
+echo 1. This is a Windows-only build
+echo 2. Users need to download FFmpeg and yt-dlp tools manually
+echo 3. Place tools in the bin/ directory
+echo 4. See install.md for detailed installation instructions
 echo.
 echo Press any key to exit...
 pause >nul
