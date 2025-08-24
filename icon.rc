@@ -5,8 +5,8 @@ IDI_ICON1 ICON "templates/favicon.ico"
 
 // 版本信息
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION 1,1,2,0
-PRODUCTVERSION 1,1,2,0
+FILEVERSION 1,2,0,0
+PRODUCTVERSION 1,2,0,0
 FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 FILEFLAGS 0x0L
 FILEOS VOS__WINDOWS32
@@ -19,12 +19,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "X-KT"
             VALUE "FileDescription", "X-KT Video Downloader"
-            VALUE "FileVersion", "1.1.2.0"
+            VALUE "FileVersion", "1.2.0.0"
             VALUE "InternalName", "VideoDown-Go"
             VALUE "LegalCopyright", "Copyright (C) 2025 X-KT"
             VALUE "OriginalFilename", "VideoDown-Go.exe"
             VALUE "ProductName", "X-KT Video Downloader"
-            VALUE "ProductVersion", "1.1.2.0"
+            VALUE "ProductVersion", "1.2.0.0"
         END
     END
     BLOCK "VarFileInfo"
