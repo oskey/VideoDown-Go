@@ -31,7 +31,7 @@
 4. **下载外部工具**
    
    **Windows 用户：**
-   - 下载 [FFmpeg](https://ffmpeg.org/download.html#build-windows) 并解压
+   - 下载 [FFmpeg (专为视频下载器优化)](https://github.com/yt-dlp/FFmpeg-Builds?tab=readme-ov-file#ffmpeg-static-auto-builds) 并解压
    - 将 `ffmpeg.exe`, `ffplay.exe`, `ffprobe.exe` 复制到项目的 `bin/` 目录
    - 下载 [yt-dlp](https://github.com/yt-dlp/yt-dlp/releases) 的 Windows 版本
    - 将 `yt-dlp.exe` 复制到项目的 `bin/` 目录

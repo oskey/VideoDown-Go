@@ -66,7 +66,7 @@ echo - ffprobe.exe >> "build/bin/README.txt"
 echo - yt-dlp.exe >> "build/bin/README.txt"
 echo. >> "build/bin/README.txt"
 echo Download links: >> "build/bin/README.txt"
-echo FFmpeg: https://ffmpeg.org/download.html >> "build/bin/README.txt"
+echo FFmpeg (optimized for video downloaders): https://github.com/yt-dlp/FFmpeg-Builds?tab=readme-ov-file#ffmpeg-static-auto-builds >> "build/bin/README.txt"
 echo yt-dlp: https://github.com/yt-dlp/yt-dlp/releases >> "build/bin/README.txt"
 
 :: Display build results

@@ -154,7 +154,7 @@ VideoDown-Go/
 ## 🙏 致谢
 
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) - 强大的视频下载工具
-- [FFmpeg](https://ffmpeg.org/) - 优秀的多媒体处理框架
+- [FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds?tab=readme-ov-file#ffmpeg-static-auto-builds) - 专为视频下载器优化的多媒体处理框架
 - [Go](https://golang.org/) - 高效的编程语言
 
 ## 📞 联系方式

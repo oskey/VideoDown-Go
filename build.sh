@@ -97,7 +97,7 @@ macOS/Linux:
 - yt-dlp
 
 下载地址:
-FFmpeg: https://ffmpeg.org/download.html
+FFmpeg (optimized for video downloaders): https://github.com/yt-dlp/FFmpeg-Builds?tab=readme-ov-file#ffmpeg-static-auto-builds
 yt-dlp: https://github.com/yt-dlp/yt-dlp/releases
 
 对于 macOS 用户，推荐使用 Homebrew 安装:
