@@ -1,0 +1,140 @@
+# 编译输出
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go 测试文件
+*.test
+
+# Go 覆盖率文件
+*.out
+
+# Go 工作区文件
+go.work
+
+# 依赖目录
+vendor/
+
+# 视频文件 - 不提交下载的视频
+*.mp4
+*.avi
+*.mkv
+*.mov
+*.wmv
+*.flv
+*.webm
+*.m4v
+*.3gp
+*.ts
+*.m3u8
+
+# 音频文件
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+*.wma
+
+# 缩略图目录 - 不提交生成的缩略图
+thumbnails/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.webp
+
+# 外部工具 - 不提交二进制工具（用户需要自行下载）
+bin/ffmpeg.exe
+bin/ffplay.exe
+bin/ffprobe.exe
+bin/yt-dlp.exe
+bin/youtube-dl.exe
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE 和编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 配置文件（如果包含敏感信息）
+config.json
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 备份文件
+*.bak
+*.backup
+
+# 压缩文件
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.tar.bz2
+
+# Node.js (如果有前端构建)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 构建输出
+build/
+dist/
+out/
+
+# 运行时文件
+pid
+*.pid
+*.seed
+*.pid.lock
+
+# 覆盖率报告
+coverage/
+*.lcov
+
+# 性能分析文件
+*.prof
+*.pprof
+
+# 测试输出
+test-results/
+
+# 文档生成
+docs/_build/
+
+# 本地开发文件
+.local
+.cache/

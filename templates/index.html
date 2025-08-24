@@ -1,0 +1,2359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-KT 视频下载器</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-hover: #3a56d4;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --error-color: #f72585;
+            --warning-color: #f8961e;
+            --background-color: #f8f9fa;
+            --card-color: #ffffff;
+            --text-color: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #e9ecef;
+            --terminal-bg: #2b2d42;
+            --terminal-text: #edf2f4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .app-header {
+            background-color: var(--card-color);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .app-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .app-title .material-symbols-rounded {
+            font-size: 28px;
+        }
+
+        .app-container {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            gap: 24px;
+            overflow: hidden;
+        }
+
+        .main-content {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .video-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .card-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title .material-symbols-rounded {
+            font-size: 20px;
+            color: var(--primary-color);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            padding: 6px 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .action-button:hover {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .action-button .material-symbols-rounded {
+            font-size: 18px;
+        }
+
+        .terminal {
+            flex: 1;
+            background-color: var(--terminal-bg);
+            color: var(--terminal-text);
+            font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+            padding: 16px 24px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.5;
+            min-height: 400px;
+            position: relative;
+        }
+
+        .terminal-content {
+            min-height: 100%;
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .terminal-placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 100%;
+        }
+
+        .card-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: flex-end;
+            gap: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .form-select, .form-input {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            transition: all 0.2s ease;
+        }
+
+        .form-select:focus, .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .form-select {
+            min-width: 180px;
+        }
+
+        .sort-select {
+            min-width: 120px;
+            margin-right: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .sort-select:hover {
+            border-color: var(--primary-color);
+        }
+
+        .sort-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .form-input {
+            min-width: 300px;
+        }
+
+        .url-group {
+            flex: 2;
+        }
+
+        .url-input {
+            min-width: 400px;
+            width: 100%;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-primary:disabled {
+            background-color: var(--text-secondary);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn-stop {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-stop:hover {
+            background-color: #c82333;
+        }
+
+        .timestamp {
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
+        .error {
+            color: var(--error-color);
+        }
+
+        .success {
+            color: var(--success-color);
+        }
+
+        .info {
+            color: #60a5fa;
+        }
+
+        .warning {
+            color: var(--warning-color);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-left: auto;
+            margin-right: 16px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #22c55e;
+        }
+
+        .status-dot.offline {
+            background-color: var(--text-secondary);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .running .status-dot {
+            animation: pulse 1.5s infinite;
+        }
+
+        /* 视频列表样式 */
+        .video-list {
+            flex: 1;
+            padding: 16px 24px;
+            overflow-y: auto;
+            background-color: var(--background-color);
+        }
+
+        .video-placeholder {
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        .video-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            background-color: var(--card-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-color);
+            position: relative;
+            min-height: 130px; /* 调整为更适合新缩略图大小的高度 */
+        }
+        
+        /* 可调整的列表项高度变量 */
+        :root {
+            --video-item-min-height: 130px; /* 视频列表项最小高度 - 可调整 */
+            --video-item-padding: 20px 24px; /* 视频列表项内边距 - 可调整 */
+            --video-item-gap: 16px; /* 视频列表项元素间距 - 可调整 */
+        }
+        
+        /* 使用CSS变量的列表项样式 */
+        .video-item {
+            min-height: var(--video-item-min-height);
+            padding: var(--video-item-padding);
+            gap: var(--video-item-gap);
+        }
+
+        .video-item:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
+        }
+
+        .video-item.selected {
+            background-color: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+
+        .video-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .video-thumbnail {
+            width: 160px;
+            height: 90px;
+            border-radius: 8px;
+            object-fit: contain;
+            flex-shrink: 0;
+            background-color: var(--border-color);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+        
+        /* 缩略图悬停效果 */
+        .video-item:hover .video-thumbnail {
+            transform: scale(1.02);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        }
+        
+        /* 竖屏视频缩略图样式 - 宽高比小于1的视频 */
+        .video-thumbnail.portrait {
+            width: 60px;
+            height: 107px;
+            object-fit: contain;
+        }
+        
+        /* 方形视频缩略图样式 - 宽高比接近1的视频 */
+        .video-thumbnail.square {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+        }
+        
+        /* 横屏视频缩略图样式 - 宽高比大于1.5的视频 */
+        .video-thumbnail.landscape {
+            width: 160px;
+            height: 90px;
+            object-fit: contain;
+        }
+        
+        /* 响应式缩略图大小调整 */
+        @media (max-width: 768px) {
+            .video-thumbnail {
+                width: 120px;
+                height: 68px;
+            }
+            .video-thumbnail.portrait {
+                width: 45px;
+                height: 80px;
+            }
+            .video-thumbnail.square {
+                width: 68px;
+                height: 68px;
+            }
+            .video-thumbnail.landscape {
+                width: 120px;
+                height: 68px;
+            }
+        }
+        
+        /* 可调整的缩略图大小变量 - 用户可以修改这些值 */
+        :root {
+            --thumbnail-width: 160px;  /* 缩略图宽度 - 可调整 */
+            --thumbnail-height: 90px;  /* 缩略图高度 - 可调整 */
+            --thumbnail-border-radius: 8px; /* 缩略图圆角 - 可调整 */
+        }
+        
+        /* 使用CSS变量的缩略图样式 - 便于用户自定义 */
+        .video-thumbnail {
+            width: var(--thumbnail-width);
+            height: var(--thumbnail-height);
+            border-radius: var(--thumbnail-border-radius);
+        }
+
+        .video-icon {
+            font-size: 24px;
+            color: var(--primary-color);
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .video-item:hover .video-icon {
+            color: white;
+        }
+
+        .video-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .video-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-size {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .video-item:hover .video-size {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 批量操作按钮 */
+        .batch-actions {
+            display: none;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .batch-actions.show {
+            display: flex;
+        }
+
+        .batch-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .batch-delete-btn {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        .batch-delete-btn:hover {
+            background-color: #d63384;
+        }
+
+        /* 右键菜单样式 */
+        .context-menu {
+            position: fixed;
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            min-width: 150px;
+            display: none;
+        }
+
+        .context-menu-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .context-menu-item:hover {
+            background-color: var(--background-color);
+        }
+
+        .context-menu-item:first-child {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .context-menu-item:last-child {
+            border-radius: 0 0 8px 8px;
+        }
+
+        .context-menu-item.delete {
+            color: var(--error-color);
+        }
+
+        .context-menu-item.delete:hover {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        /* 重命名对话框样式 */
+        .rename-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: scale(0.9) translateY(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .rename-modal-content {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 480px;
+            overflow: hidden;
+            border: 2px solid #333333;
+            transform: scale(0.9);
+            animation: modalSlideIn 0.3s ease-out forwards;
+        }
+
+        .rename-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid #cccccc;
+            background: #f8f9fa;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .rename-modal-header h3 {
+            margin: 0;
+            font-weight: 600;
+            color: #333333;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rename-modal-header h3::before {
+            content: "✏️";
+            font-size: 20px;
+        }
+
+        .rename-modal-close {
+            background: #f0f0f0;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666666;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rename-modal-close:hover {
+            background: #ffebee;
+            color: #ff4757;
+            transform: rotate(90deg);
+        }
+
+        .rename-modal-body {
+            padding: 24px;
+            background: #ffffff;
+        }
+
+        .rename-modal-body label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #333333;
+            font-size: 15px;
+        }
+
+        .rename-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #cccccc;
+            border-radius: 12px;
+            background: #ffffff;
+            color: #333333;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .rename-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .rename-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+            padding: 20px 24px;
+            border-top: 1px solid #cccccc;
+            background: #f8f9fa;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-cancel {
+            background: linear-gradient(145deg, var(--background-color), rgba(255, 255, 255, 0.05));
+            color: var(--text-secondary);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-cancel:hover {
+            background: linear-gradient(145deg, var(--border-color), rgba(255, 255, 255, 0.1));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-confirm {
+            background: linear-gradient(145deg, var(--primary-color), #0056b3);
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn-confirm:hover {
+            background: linear-gradient(145deg, #0056b3, #004494);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 123, 255, 0.4);
+        }
+
+        .btn-confirm:disabled {
+            background: linear-gradient(145deg, #6c757d, #5a6268);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 确认对话框样式 */
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .confirm-modal-content {
+            background: #ffffff;
+            margin: 10% auto;
+            padding: 0;
+            border: 2px solid #333333;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease-out;
+            overflow: hidden;
+        }
+
+        .confirm-modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #cccccc;
+            background: #f8f9fa;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .confirm-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, rgba(255, 193, 7, 0.2), rgba(255, 193, 7, 0.1));
+            border-radius: 50%;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .confirm-modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333333;
+            flex: 1;
+        }
+
+        .confirm-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666666;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .confirm-modal-close:hover {
+            background: #f0f0f0;
+            color: #333333;
+            transform: scale(1.1);
+        }
+
+        .confirm-modal-body {
+            padding: 24px;
+            text-align: center;
+        }
+
+        .confirm-modal-body p {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #555555;
+        }
+
+        .confirm-modal-footer {
+            padding: 16px 24px 24px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background: #f8f9fa;
+        }
+
+        /* 消息对话框样式 */
+        .message-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .message-modal-content {
+            background: #ffffff;
+            margin: 10% auto;
+            padding: 0;
+            border: 2px solid #333333;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease-out;
+            overflow: hidden;
+        }
+
+        .message-modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #cccccc;
+            background: #f8f9fa;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .message-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, rgba(0, 123, 255, 0.2), rgba(0, 123, 255, 0.1));
+            border-radius: 50%;
+            border: 1px solid rgba(0, 123, 255, 0.3);
+        }
+
+        .message-modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333333;
+            flex: 1;
+        }
+
+        .message-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666666;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .message-modal-close:hover {
+            background: #f0f0f0;
+            color: #333333;
+            transform: scale(1.1);
+        }
+
+        .message-modal-body {
+            padding: 24px;
+            text-align: center;
+        }
+
+        .message-modal-body p {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #555555;
+        }
+
+        .message-modal-footer {
+            padding: 16px 24px 24px;
+            display: flex;
+            justify-content: center;
+            background: #f8f9fa;
+        }
+
+        /* 视频播放弹窗样式 */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .video-modal.show {
+            display: flex;
+        }
+
+        .video-modal-content {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 0;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .video-modal-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .video-modal-title {
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        .video-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .video-modal-close:hover {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .video-player-container {
+            position: relative;
+            background-color: #000;
+        }
+
+        .video-player {
+            width: 100%;
+            height: auto;
+            max-height: 70vh;
+            display: block;
+        }
+
+        /* 图片预览弹窗样式 */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-modal.show {
+            display: flex;
+        }
+
+        .image-modal-content {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 2px solid #333333;
+        }
+
+        .image-modal-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #cccccc;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .image-modal-title {
+            font-weight: 600;
+            color: #333333;
+            margin: 0;
+        }
+
+        .image-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666666;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .image-modal-close:hover {
+            background: #f0f0f0;
+            color: #333333;
+        }
+
+        .image-preview-container {
+            position: relative;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 70vh;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .app-header {
+                padding: 12px 16px;
+            }
+
+            .app-container {
+                padding: 16px;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .main-content, .video-panel {
+                flex: none;
+            }
+
+            .card-header, .card-footer {
+                padding: 12px 16px;
+            }
+
+            .terminal {
+                padding: 12px 16px;
+                min-height: 200px;
+            }
+
+            .video-list {
+                padding: 12px 16px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+            }
+
+            .video-modal-content {
+                max-width: 95vw;
+                max-height: 95vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="app-title">
+            <span class="material-symbols-rounded">smart_display</span>
+            X-KT 视频下载器
+        </div>
+        <div class="status-indicator">
+            <div class="status-dot" id="connectionStatus"></div>
+            <span id="statusText">已连接</span>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <!-- 左侧：日志和控制区域 -->
+        <div class="main-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="material-symbols-rounded">terminal</span>
+                        命令输出
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-button" id="clearBtn">
+                            <span class="material-symbols-rounded">delete</span>
+                            清空
+                        </button>
+                        <button class="action-button" id="scrollBtn">
+                            <span class="material-symbols-rounded">vertical_align_bottom</span>
+                            滚动到底部
+                        </button>
+                    </div>
+                </div>
+                <div class="terminal" id="logOutput">
+                    <div class="terminal-content" id="terminalContent"></div>
+                    <div class="terminal-placeholder" id="placeholder">等待运行命令...</div>
+                </div>
+                <div class="card-footer">
+                    <div class="input-group">
+                        <div class="form-group url-group">
+                            <label for="urlInput">网址:</label>
+                            <input type="url" id="urlInput" class="form-input url-input" placeholder="请输入视频网址..." />
+                        </div>
+                        <div class="form-group">
+                            <label for="platformSelect">平台类型:</label>
+                            <select id="platformSelect" class="form-select">
+                                <option value="youtube">YouTube</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="bilibili">Bilibili</option>
+                                <option value="generic1">其他通用1（最高画质）</option>
+                                <option value="generic2">其他通用2</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="runButton">
+                        <span class="material-symbols-rounded">play_arrow</span>
+                        运行
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：视频列表预览区域 -->
+        <div class="video-panel">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="material-symbols-rounded">video_library</span>
+                        视频列表
+                    </div>
+                    <div class="card-actions">
+                        <select class="form-select sort-select" id="sortSelect">
+                            <option value="time">按创建时间</option>
+                            <option value="size">按文件大小</option>
+                        </select>
+                        <button class="action-button" id="refreshVideoBtn">
+                            <span class="material-symbols-rounded">refresh</span>
+                            刷新
+                        </button>
+                    </div>
+                </div>
+                <div class="video-list" id="videoList">
+                    <div class="batch-actions" id="batchActions">
+                        <button class="batch-btn batch-delete-btn" id="batchDeleteBtn">
+                            <span class="material-symbols-rounded">delete</span>
+                            删除选中项 (<span id="selectedCount">0</span>)
+                        </button>
+                    </div>
+                    <div class="video-placeholder" id="videoPlaceholder">正在扫描视频文件...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右键菜单 -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" id="renameItem">
+            <span class="material-symbols-rounded">edit</span>
+            重命名
+        </div>
+        <div class="context-menu-item delete" id="deleteItem">
+            <span class="material-symbols-rounded">delete</span>
+            删除
+        </div>
+    </div>
+
+    <!-- 重命名对话框 -->
+    <div class="rename-modal" id="renameModal">
+        <div class="rename-modal-content">
+            <div class="rename-modal-header">
+                <h3>重命名视频文件</h3>
+                <button class="rename-modal-close" id="renameModalClose">&times;</button>
+            </div>
+            <div class="rename-modal-body">
+                <label for="newFileName">新文件名（不包含扩展名）:</label>
+                <input type="text" id="newFileName" class="rename-input" placeholder="请输入新的文件名">
+            </div>
+            <div class="rename-modal-footer">
+                <button class="btn btn-cancel" id="renameCancelBtn">取消</button>
+                <button class="btn btn-confirm" id="renameConfirmBtn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 现代化确认对话框 -->
+    <div class="confirm-modal" id="confirmModal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <div class="confirm-icon" id="confirmIcon">⚠️</div>
+                <h3 id="confirmTitle">确认操作</h3>
+                <button class="confirm-modal-close" id="confirmModalClose">&times;</button>
+            </div>
+            <div class="confirm-modal-body">
+                <p id="confirmMessage">您确定要执行此操作吗？</p>
+            </div>
+            <div class="confirm-modal-footer">
+                <button class="btn btn-cancel" id="confirmCancelBtn">取消</button>
+                <button class="btn btn-confirm" id="confirmOkBtn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消息提示对话框 -->
+    <div class="message-modal" id="messageModal">
+        <div class="message-modal-content">
+            <div class="message-modal-header">
+                <div class="message-icon" id="messageIcon">ℹ️</div>
+                <h3 id="messageTitle">提示</h3>
+                <button class="message-modal-close" id="messageModalClose">&times;</button>
+            </div>
+            <div class="message-modal-body">
+                <p id="messageText">这是一条消息</p>
+            </div>
+            <div class="message-modal-footer">
+                <button class="btn btn-confirm" id="messageOkBtn">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 视频播放弹窗 -->
+    <div class="video-modal" id="videoModal">
+        <div class="video-modal-content">
+            <div class="video-modal-header">
+                <h3 class="video-modal-title" id="videoModalTitle">视频播放</h3>
+                <button class="video-modal-close" id="videoModalClose">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="video-player-container">
+                <video class="video-player" id="videoPlayer" controls>
+                    您的浏览器不支持视频播放。
+                </video>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片预览弹窗 -->
+    <div class="image-modal" id="imageModal">
+        <div class="image-modal-content">
+            <div class="image-modal-header">
+                <h3 class="image-modal-title" id="imageModalTitle">缩略图预览</h3>
+                <button class="image-modal-close" id="imageModalClose">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="image-preview-container">
+                <img class="image-preview" id="imagePreview" alt="缩略图预览">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM 元素
+        const logOutput = document.getElementById('logOutput');
+        const terminalContent = document.getElementById('terminalContent');
+        const placeholder = document.getElementById('placeholder');
+        const runButton = document.getElementById('runButton');
+        const clearBtn = document.getElementById('clearBtn');
+        const scrollBtn = document.getElementById('scrollBtn');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const statusText = document.getElementById('statusText');
+        const urlInput = document.getElementById('urlInput');
+        const platformSelect = document.getElementById('platformSelect');
+        
+        // 视频列表相关DOM元素
+        const videoList = document.getElementById('videoList');
+        const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const refreshVideoBtn = document.getElementById('refreshVideoBtn');
+        const sortSelect = document.getElementById('sortSelect');
+        const videoModal = document.getElementById('videoModal');
+        const videoModalTitle = document.getElementById('videoModalTitle');
+        const videoModalClose = document.getElementById('videoModalClose');
+        const videoPlayer = document.getElementById('videoPlayer');
+        
+        // 图片预览相关DOM元素
+        const imageModal = document.getElementById('imageModal');
+        const imageModalTitle = document.getElementById('imageModalTitle');
+        const imageModalClose = document.getElementById('imageModalClose');
+        const imagePreview = document.getElementById('imagePreview');
+
+        // 状态变量
+        let socket;
+        let isRunning = false;
+        let hasContent = false;
+        let taskID = null;
+        
+        // 生成唯一的任务ID
+        function generateTaskID() {
+            return 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        let currentVideos = [];
+        
+        // 自动检测平台类型
+        function detectPlatform(url) {
+            if (!url) return 'generic1';
+            
+            const lowerUrl = url.toLowerCase();
+            
+            if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                return 'youtube';
+            } else if (lowerUrl.includes('tiktok.com')) {
+                return 'tiktok';
+            } else if (lowerUrl.includes('bilibili.com') || lowerUrl.includes('b23.tv')) {
+                return 'bilibili';
+            } else {
+                return 'generic1'; // 未知网址默认选择其他通用1
+            }
+        }
+        
+        // 初始化WebSocket连接
+        function initWebSocket() {
+            // 创建WebSocket连接
+            socket = new WebSocket(`ws://${window.location.host}/ws`);
+            
+            // 连接打开时的处理
+            socket.onopen = function(e) {
+                console.log('WebSocket连接已建立');
+                connectionStatus.classList.remove('offline');
+                statusText.textContent = '已连接';
+                
+                // 生成并注册任务ID
+                taskID = generateTaskID();
+                const registerMessage = {
+                    type: 'register',
+                    taskID: taskID
+                };
+                socket.send(JSON.stringify(registerMessage));
+                console.log('已注册任务ID:', taskID);
+            };
+            
+            // 接收消息的处理
+            socket.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    // 只处理系统消息或属于当前任务ID的消息
+                    if (data.type === 'system' || data.taskID === taskID) {
+                        appendLog(data.message);
+                    }
+                } catch (e) {
+                    // 兼容旧格式的纯文本消息
+                    appendLog(event.data);
+                }
+            };
+            
+            // 连接关闭时的处理
+            socket.onclose = function(event) {
+                connectionStatus.classList.add('offline');
+                statusText.textContent = '已断开';
+                
+                console.log(`WebSocket连接已关闭，代码=${event.code} 原因=${event.reason}`);
+                
+                // 如果正在运行命令，重新启用按钮（防止卡死）
+                if (isRunning) {
+                    console.log('检测到连接断开时正在运行命令，重新启用按钮');
+                    resetButton();
+                }
+                
+                // 尝试重新连接
+                setTimeout(initWebSocket, 2000);
+            };
+            
+            // 连接错误时的处理
+            socket.onerror = function(error) {
+                console.log(`WebSocket错误: ${error.message}`);
+                connectionStatus.classList.add('offline');
+                statusText.textContent = '连接错误';
+                
+                // 如果正在运行命令，重新启用按钮（防止卡死）
+                if (isRunning) {
+                    console.log('检测到连接错误时正在运行命令，重新启用按钮');
+                    resetButton();
+                }
+            };
+        }
+        
+        // 添加日志到输出区域
+        function appendLog(message) {
+            // 检测命令完成信号
+            if (message === 'COMMAND_FINISHED') {
+                resetButton();
+                
+                // 添加成功下载完成的日志
+                const urlInput = document.getElementById('urlInput');
+                const currentUrl = urlInput ? urlInput.value : '未知网址';
+                const now = new Date();
+                const timestamp = now.getFullYear().toString() + 
+                                (now.getMonth() + 1).toString().padStart(2, '0') + 
+                                now.getDate().toString().padStart(2, '0') + 
+                                now.getHours().toString().padStart(2, '0') + 
+                                now.getMinutes().toString().padStart(2, '0');
+                const successMessage = `${currentUrl} 已成功下载完毕 [${timestamp}]`;
+                
+                // 显示成功消息
+                displaySuccessLog(successMessage);
+                
+                // 自动刷新视频列表以显示新下载的视频
+                setTimeout(() => {
+                    fetchVideoList();
+                }, 1000);
+                
+                return; // 不显示COMMAND_FINISHED内部信号
+            }
+            
+            // 过滤不需要显示的控制台提示信息（只过滤特定的系统内部消息）
+            if (message.includes('客户端注册任务ID:') || 
+                message === 'COMMAND_FINISHED' ||
+                message.includes('WebSocket连接') ||
+                (message.includes('连接') && !message.includes('下载')) ||
+                message.includes('任务ID注册') ||
+                message.startsWith('{"taskID"') && message.includes('"message":"COMMAND_FINISHED"')) {
+                return; // 不显示这些内部信息
+            }
+            
+            // 如果是第一条消息，隐藏占位符
+            if (!hasContent) {
+                placeholder.style.display = 'none';
+                hasContent = true;
+            }
+            
+            // 创建新的日志行
+            const logLine = document.createElement('div');
+            logLine.className = 'terminal-line';
+            
+            // 检测下载成功消息并触发刷新
+            if (message.includes('已成功下载完毕')) {
+                // 延迟刷新视频列表，确保文件已完全写入
+                setTimeout(() => {
+                    fetchVideoList();
+                }, 1500);
+            }
+            
+            // 根据消息类型添加不同的样式
+            if (message.includes('错误')) {
+                logLine.classList.add('error');
+            } else if (message.includes('完成') || message.includes('已成功下载完毕')) {
+                logLine.classList.add('success');
+            } else if (message.startsWith('执行命令:')) {
+                logLine.classList.add('info');
+                logLine.style.fontWeight = 'bold';
+            } else if (message.includes('[')) {
+                // 时间戳消息
+                const parts = message.split(']');
+                if (parts.length > 1) {
+                    const timestamp = parts[0] + ']';
+                    const content = parts.slice(1).join(']');
+                    logLine.innerHTML = `<span class="timestamp">${timestamp}</span>${content}`;
+                } else {
+                    logLine.textContent = message;
+                }
+            } else {
+                logLine.textContent = message;
+            }
+            
+            // 如果没有特殊处理过HTML内容，则直接设置文本内容
+            if (logLine.innerHTML === '') {
+                logLine.textContent = message;
+            }
+            
+            // 添加到终端内容区域
+            terminalContent.appendChild(logLine);
+            
+            // 自动滚动到底部
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        // 运行按钮点击事件
+        runButton.addEventListener('click', function() {
+            if (isRunning) {
+                // 停止运行
+                stopDownload();
+                return;
+            }
+            
+            // 获取参数
+            const platform = document.getElementById('platformSelect').value;
+            const url = document.getElementById('urlInput').value.trim();
+            
+            // 验证网址是否为空
+            if (!url) {
+                appendLog('错误: 请输入视频网址');
+                return;
+            }
+            
+            // 确保taskID存在
+            if (!taskID) {
+                taskID = generateTaskID();
+                console.log('生成新的任务ID:', taskID);
+            }
+            
+            // 开始运行
+            startDownload();
+            
+            // 发送运行请求，包含参数和任务ID
+            fetch('/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    platform: platform,
+                    url: url,
+                    taskID: taskID
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text || `HTTP ${response.status}: ${response.statusText}`);
+                    });
+                }
+                return response.text();
+            })
+            .catch(error => {
+                appendLog(`错误: ${error.message}`);
+                resetButton();
+            });
+        });
+        
+        // 开始下载状态
+        function startDownload() {
+            isRunning = true;
+            runButton.className = 'btn btn-stop';
+            runButton.innerHTML = '<span class="material-symbols-rounded">stop</span>停止';
+            document.querySelector('.status-indicator').classList.add('running');
+        }
+        
+        // 重置按钮状态
+        function resetButton() {
+            isRunning = false;
+            runButton.className = 'btn btn-primary';
+            runButton.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>运行';
+            document.querySelector('.status-indicator').classList.remove('running');
+        }
+        
+        // 停止下载
+        function stopDownload() {
+            fetch('/stop', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    taskID: taskID
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    appendLog('用户停止下载');
+                    resetButton();
+                } else {
+                    return response.text().then(text => {
+                        appendLog(`停止下载失败: ${text || `HTTP ${response.status}: ${response.statusText}`}`);
+                    });
+                }
+            })
+            .catch(error => {
+                appendLog(`停止下载错误: ${error.message}`);
+            });
+        }
+        
+        // 清空日志按钮点击事件
+        clearBtn.addEventListener('click', function() {
+            terminalContent.innerHTML = '';
+            hasContent = false;
+            placeholder.style.display = 'block';
+        });
+        
+        // 滚动到底部按钮点击事件
+        scrollBtn.addEventListener('click', function() {
+            logOutput.scrollTop = logOutput.scrollHeight;
+        });
+        
+        // 网址输入框事件监听
+        urlInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            const detectedPlatform = detectPlatform(url);
+            platformSelect.value = detectedPlatform;
+        });
+        
+        // 显示成功下载完成的日志
+        function displaySuccessLog(message) {
+            // 如果是第一条消息，隐藏占位符
+            if (!hasContent) {
+                placeholder.style.display = 'none';
+                hasContent = true;
+            }
+            
+            // 创建新的日志行
+            const logLine = document.createElement('div');
+            logLine.className = 'terminal-line success';
+            logLine.style.fontWeight = 'bold';
+            logLine.style.color = '#00ff00';
+            logLine.textContent = message;
+            
+            // 添加到输出区域
+            terminalContent.appendChild(logLine);
+            
+            // 自动滚动到底部
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        // 获取视频列表
+        async function fetchVideoList() {
+            try {
+                const sortBy = sortSelect.value || 'time';
+                const response = await fetch(`/api/videos?sort=${sortBy}`);
+                if (response.ok) {
+                    const videos = await response.json();
+                    displayVideoList(videos);
+                } else {
+                    console.error('获取视频列表失败:', response.statusText);
+                }
+            } catch (error) {
+                console.error('获取视频列表错误:', error);
+            }
+        }
+        
+        // 显示视频列表
+        function displayVideoList(videos) {
+            currentVideos = videos;
+            
+            // 检查videos是否为null、undefined或空数组
+            if (!videos || videos.length === 0) {
+                videoList.innerHTML = '<div class="batch-actions" id="batchActions"><button class="batch-btn batch-delete-btn" id="batchDeleteBtn"><span class="material-symbols-rounded">delete</span>删除选中项 (<span id="selectedCount">0</span>)</button></div><div class="video-placeholder" id="videoPlaceholder">暂无视频文件</div>';
+                // 使用事件委托，不需要重新绑定
+                return;
+            }
+            
+            videoPlaceholder.style.display = 'none';
+            
+            // 保存当前选中状态
+            const selectedFiles = Array.from(document.querySelectorAll('.video-checkbox:checked')).map(cb => cb.closest('.video-item').dataset.filename);
+            
+            // 清空现有内容并重新创建批量操作区域
+            videoList.innerHTML = `
+                <div class="batch-actions" id="batchActions">
+                    <button class="batch-btn batch-delete-btn" id="batchDeleteBtn">
+                        <span class="material-symbols-rounded">delete</span>
+                        删除选中项 (<span id="selectedCount">0</span>)
+                    </button>
+                </div>
+            `;
+            
+            videos.forEach(video => {
+                const videoItem = document.createElement('div');
+                videoItem.className = 'video-item';
+                videoItem.dataset.filename = video.name;
+                
+                // 创建复选框
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'video-checkbox';
+                // 恢复选中状态
+                if (selectedFiles.includes(video.name)) {
+                    checkbox.checked = true;
+                }
+                checkbox.addEventListener('change', updateBatchActions);
+                checkbox.addEventListener('click', (e) => e.stopPropagation());
+                
+                // 创建预览图
+                const thumbnail = document.createElement('img');
+                thumbnail.className = 'video-thumbnail';
+                thumbnail.src = `/api/thumbnail/${encodeURIComponent(video.name)}`;
+                thumbnail.onerror = () => {
+                    thumbnail.style.display = 'none';
+                };
+                
+                // 缩略图加载完成后检测宽高比并应用相应样式
+                thumbnail.onload = () => {
+                    const aspectRatio = thumbnail.naturalWidth / thumbnail.naturalHeight;
+                    
+                    // 移除所有宽高比相关的类
+                    thumbnail.classList.remove('portrait', 'square', 'landscape');
+                    
+                    // 根据宽高比添加相应的类
+                    if (aspectRatio < 0.8) {
+                        // 竖屏视频 (宽高比小于0.8)
+                        thumbnail.classList.add('portrait');
+                    } else if (aspectRatio >= 0.8 && aspectRatio <= 1.3) {
+                        // 方形视频 (宽高比在0.8-1.3之间)
+                        thumbnail.classList.add('square');
+                    } else {
+                        // 横屏视频 (宽高比大于1.3)
+                        thumbnail.classList.add('landscape');
+                    }
+                };
+                
+                // 创建播放图标
+                const playIcon = document.createElement('div');
+                playIcon.className = 'video-icon';
+                playIcon.innerHTML = '<span class="material-symbols-rounded">play_circle</span>';
+                
+                // 创建视频信息
+                const videoInfo = document.createElement('div');
+                videoInfo.className = 'video-info';
+                videoInfo.innerHTML = `
+                    <div class="video-name" title="${video.name}">${video.name}</div>
+                    <div class="video-size">${formatFileSize(video.size)}</div>
+                `;
+                
+                // 组装视频项
+                videoItem.appendChild(checkbox);
+                videoItem.appendChild(thumbnail);
+                videoItem.appendChild(playIcon);
+                videoItem.appendChild(videoInfo);
+                
+                // 点击事件通过事件委托处理
+                
+                // 右键菜单事件通过事件委托处理
+                videoItem.setAttribute('data-filename', video.name);
+                
+                videoList.appendChild(videoItem);
+            });
+            
+            // 使用事件委托绑定批量删除按钮事件
+            // 不需要重复绑定，因为我们使用了事件委托
+            
+            // 更新批量操作按钮状态
+            updateBatchActions();
+        }
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 播放视频
+        function playVideo(video) {
+            videoModalTitle.textContent = video.name;
+            videoPlayer.src = `/api/video/${encodeURIComponent(video.name)}`;
+            videoModal.style.display = 'flex';
+            
+            // 自动开始播放
+            videoPlayer.addEventListener('loadeddata', function() {
+                videoPlayer.play().catch(error => {
+                    console.log('自动播放失败，可能需要用户交互:', error);
+                });
+            }, { once: true });
+        }
+        
+        // 显示图片预览
+        function showImagePreview(videoName, thumbnailSrc) {
+            imageModalTitle.textContent = `${videoName} - 缩略图预览`;
+            imagePreview.src = thumbnailSrc;
+            imageModal.classList.add('show');
+        }
+        
+        // 关闭图片预览
+        function closeImagePreview() {
+            imageModal.classList.remove('show');
+            imagePreview.src = '';
+        }
+        
+        // 批量操作相关函数
+        function updateBatchActions() {
+            const checkboxes = document.querySelectorAll('.video-checkbox:checked');
+            const batchActions = document.getElementById('batchActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (checkboxes.length > 0) {
+                batchActions.classList.add('show');
+                selectedCount.textContent = checkboxes.length;
+            } else {
+                batchActions.classList.remove('show');
+                selectedCount.textContent = '0';
+            }
+        }
+
+        async function batchDeleteVideos() {
+            const checkboxes = document.querySelectorAll('.video-checkbox:checked');
+            const filenames = Array.from(checkboxes).map(cb => cb.closest('.video-item').dataset.filename);
+            
+            if (filenames.length === 0) return;
+            
+            const confirmed = await showConfirmDialog(
+                '批量删除确认',
+                `确定要删除选中的 ${filenames.length} 个视频文件吗？此操作不可撤销。`,
+                '🗑️'
+            );
+            
+            if (confirmed) {
+                fetch('/api/batch-delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ filenames: filenames })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage('批量删除成功', 'success');
+                        fetchVideoList();
+                    } else {
+                        showMessage('批量删除失败: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    showMessage('批量删除失败: ' + error.message, 'error');
+                });
+            }
+        }
+
+        // 右键菜单相关函数
+        let currentContextFile = null;
+
+        function showContextMenu(event, filename) {
+            const contextMenu = document.getElementById('contextMenu');
+            currentContextFile = filename;
+            
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = event.pageX + 'px';
+            contextMenu.style.top = event.pageY + 'px';
+        }
+
+        function hideContextMenu() {
+            const contextMenu = document.getElementById('contextMenu');
+            contextMenu.style.display = 'none';
+            currentContextFile = null;
+        }
+
+        async function deleteVideo(filename) {
+            const confirmed = await showConfirmDialog(
+                '删除确认',
+                `确定要删除视频文件 "${filename}" 吗？此操作不可撤销。`,
+                '🗑️'
+            );
+            
+            if (confirmed) {
+                fetch('/api/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ filename: filename })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage('删除成功', 'success');
+                        fetchVideoList();
+                    } else {
+                        showMessage('删除失败: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    showMessage('删除失败: ' + error.message, 'error');
+                });
+            }
+        }
+
+        function renameVideo(filename) {
+            const renameModal = document.getElementById('renameModal');
+            const newFileNameInput = document.getElementById('newFileName');
+            const renameConfirmBtn = document.getElementById('renameConfirmBtn');
+            const renameCancelBtn = document.getElementById('renameCancelBtn');
+            const renameModalClose = document.getElementById('renameModalClose');
+            
+            // 设置初始值
+            newFileNameInput.value = filename.replace('.mp4', '');
+            renameModal.style.display = 'flex';
+            newFileNameInput.focus();
+            newFileNameInput.select();
+            
+            // 确认重命名
+            const confirmRename = () => {
+                const newName = newFileNameInput.value.trim();
+                
+                // 验证输入
+                if (!newName) {
+                    showRenameError('文件名不能为空');
+                    return;
+                }
+                
+                // 检查文件名是否包含非法字符
+                const invalidChars = /[<>:"/\\|?*]/;
+                if (invalidChars.test(newName)) {
+                    showRenameError('文件名包含非法字符: < > : " / \\ | ? *');
+                    return;
+                }
+                
+                if (newName !== filename.replace('.mp4', '')) {
+                    const newFilename = newName + '.mp4';
+                    
+                    // 检查文件名是否已存在
+                    const existingVideos = document.querySelectorAll('.video-item');
+                    const existingNames = Array.from(existingVideos).map(item => item.dataset.filename);
+                    
+                    if (existingNames.includes(newFilename)) {
+                        showRenameError('文件名已存在，请选择其他名称');
+                        return;
+                    }
+                    
+                    // 显示加载状态
+                    renameConfirmBtn.disabled = true;
+                    renameConfirmBtn.innerHTML = '<span class="loading-spinner"></span> 重命名中...';
+                    
+                    fetch('/api/rename', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            oldFilename: filename,
+                            newFilename: newFilename
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showMessage('✅ 重命名成功', 'success');
+                            fetchVideoList();
+                            closeRenameModal();
+                        } else {
+                            showRenameError('重命名失败: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        showRenameError('重命名失败: ' + error.message);
+                    })
+                    .finally(() => {
+                        renameConfirmBtn.disabled = false;
+                        renameConfirmBtn.innerHTML = '确认';
+                    });
+                } else {
+                    closeRenameModal();
+                }
+            };
+            
+            // 显示重命名错误
+            const showRenameError = (message) => {
+                const errorDiv = document.getElementById('renameError') || createRenameErrorDiv();
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+                newFileNameInput.style.borderColor = '#ff4757';
+                
+                // 3秒后自动隐藏错误信息
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                    newFileNameInput.style.borderColor = '';
+                }, 3000);
+            };
+            
+            // 创建错误提示元素
+            const createRenameErrorDiv = () => {
+                const errorDiv = document.createElement('div');
+                errorDiv.id = 'renameError';
+                errorDiv.style.cssText = `
+                    color: #ff4757;
+                    font-size: 13px;
+                    margin-top: 8px;
+                    padding: 8px 12px;
+                    background: rgba(255, 71, 87, 0.1);
+                    border-radius: 6px;
+                    border-left: 3px solid #ff4757;
+                    display: none;
+                `;
+                newFileNameInput.parentNode.appendChild(errorDiv);
+                return errorDiv;
+            };
+            
+            // 关闭对话框
+            const closeRenameModal = () => {
+                renameModal.style.display = 'none';
+                // 移除事件监听器
+                renameConfirmBtn.removeEventListener('click', confirmRename);
+                renameCancelBtn.removeEventListener('click', closeRenameModal);
+                renameModalClose.removeEventListener('click', closeRenameModal);
+            };
+            
+            // 添加事件监听器
+            renameConfirmBtn.addEventListener('click', confirmRename);
+            renameCancelBtn.addEventListener('click', closeRenameModal);
+            renameModalClose.addEventListener('click', closeRenameModal);
+            
+            // 回车键确认
+            newFileNameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    confirmRename();
+                }
+            });
+        }
+
+        // 现代化确认对话框函数
+        function showConfirmDialog(title, message, icon = '⚠️') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirmModal');
+                const titleEl = document.getElementById('confirmTitle');
+                const messageEl = document.getElementById('confirmMessage');
+                const iconEl = document.getElementById('confirmIcon');
+                const okBtn = document.getElementById('confirmOkBtn');
+                const cancelBtn = document.getElementById('confirmCancelBtn');
+                const closeBtn = document.getElementById('confirmModalClose');
+                
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+                iconEl.textContent = icon;
+                
+                modal.style.display = 'block';
+                
+                const handleOk = () => {
+                    modal.style.display = 'none';
+                    cleanup();
+                    resolve(true);
+                };
+                
+                const handleCancel = () => {
+                    modal.style.display = 'none';
+                    cleanup();
+                    resolve(false);
+                };
+                
+                const cleanup = () => {
+                    okBtn.removeEventListener('click', handleOk);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    closeBtn.removeEventListener('click', handleCancel);
+                };
+                
+                okBtn.addEventListener('click', handleOk);
+                cancelBtn.addEventListener('click', handleCancel);
+                closeBtn.addEventListener('click', handleCancel);
+                
+                // ESC键关闭
+                const handleKeydown = (e) => {
+                    if (e.key === 'Escape') {
+                        handleCancel();
+                        document.removeEventListener('keydown', handleKeydown);
+                    }
+                };
+                document.addEventListener('keydown', handleKeydown);
+            });
+        }
+        
+        // 现代化消息对话框函数
+        function showMessageDialog(title, message, icon = 'ℹ️') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('messageModal');
+                const titleEl = document.getElementById('messageTitle');
+                const messageEl = document.getElementById('messageText');
+                const iconEl = document.getElementById('messageIcon');
+                const okBtn = document.getElementById('messageOkBtn');
+                const closeBtn = document.getElementById('messageModalClose');
+                
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+                iconEl.textContent = icon;
+                
+                // 根据消息类型设置不同的图标和颜色
+                if (title.includes('成功') || message.includes('成功')) {
+                    iconEl.textContent = '✅';
+                    iconEl.style.background = 'linear-gradient(145deg, rgba(40, 167, 69, 0.2), rgba(40, 167, 69, 0.1))';
+                    iconEl.style.borderColor = 'rgba(40, 167, 69, 0.3)';
+                } else if (title.includes('错误') || title.includes('失败') || message.includes('错误') || message.includes('失败')) {
+                    iconEl.textContent = '❌';
+                    iconEl.style.background = 'linear-gradient(145deg, rgba(220, 53, 69, 0.2), rgba(220, 53, 69, 0.1))';
+                    iconEl.style.borderColor = 'rgba(220, 53, 69, 0.3)';
+                } else {
+                    iconEl.textContent = icon;
+                    iconEl.style.background = 'linear-gradient(145deg, rgba(0, 123, 255, 0.2), rgba(0, 123, 255, 0.1))';
+                    iconEl.style.borderColor = 'rgba(0, 123, 255, 0.3)';
+                }
+                
+                modal.style.display = 'block';
+                
+                const handleOk = () => {
+                    modal.style.display = 'none';
+                    cleanup();
+                    resolve();
+                };
+                
+                const cleanup = () => {
+                    okBtn.removeEventListener('click', handleOk);
+                    closeBtn.removeEventListener('click', handleOk);
+                };
+                
+                okBtn.addEventListener('click', handleOk);
+                closeBtn.addEventListener('click', handleOk);
+                
+                // ESC键关闭
+                const handleKeydown = (e) => {
+                    if (e.key === 'Escape') {
+                        handleOk();
+                        document.removeEventListener('keydown', handleKeydown);
+                    }
+                };
+                document.addEventListener('keydown', handleKeydown);
+            });
+        }
+        
+        function showMessage(message, type) {
+            // 使用现代化消息对话框
+            let title = '提示';
+            let icon = 'ℹ️';
+            
+            if (type === 'success') {
+                title = '成功';
+                icon = '✅';
+            } else if (type === 'error') {
+                title = '错误';
+                icon = '❌';
+            }
+            
+            showMessageDialog(title, message, icon);
+        }
+        
+        // 关闭视频播放器
+        function closeVideoModal() {
+            videoModal.style.display = 'none';
+            videoPlayer.pause();
+            videoPlayer.src = '';
+        }
+        
+        // 初始化视频列表
+        function initVideoList() {
+            fetchVideoList();
+        }
+        
+        // 视频相关事件监听器
+        refreshVideoBtn.addEventListener('click', fetchVideoList);
+        sortSelect.addEventListener('change', fetchVideoList);
+        videoModalClose.addEventListener('click', closeVideoModal);
+        
+        // 右键菜单事件监听器
+        document.getElementById('deleteItem').addEventListener('click', function() {
+            if (currentContextFile) {
+                deleteVideo(currentContextFile);
+                hideContextMenu();
+            }
+        });
+        
+        document.getElementById('renameItem').addEventListener('click', function() {
+            if (currentContextFile) {
+                renameVideo(currentContextFile);
+                hideContextMenu();
+            }
+        });
+        
+        // 点击其他地方隐藏右键菜单
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#contextMenu')) {
+                hideContextMenu();
+            }
+        });
+        
+        // 点击模态框背景关闭
+        videoModal.addEventListener('click', function(e) {
+            if (e.target === videoModal) {
+                closeVideoModal();
+            }
+        });
+        
+        // ESC键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && videoModal.style.display === 'flex') {
+                closeVideoModal();
+            }
+            if (e.key === 'Escape' && imageModal.classList.contains('show')) {
+                closeImagePreview();
+            }
+        });
+        
+        // 图片模态框关闭按钮事件
+        imageModalClose.addEventListener('click', closeImagePreview);
+        
+        // 点击图片模态框背景关闭
+        imageModal.addEventListener('click', function(e) {
+            if (e.target === imageModal) {
+                closeImagePreview();
+            }
+        });
+        
+        // 页面加载完成后初始化WebSocket和视频列表
+        window.addEventListener('load', function() {
+            initWebSocket();
+            initVideoList();
+            
+            // 使用事件委托处理批量删除按钮点击
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('#batchDeleteBtn')) {
+                    e.preventDefault();
+                    batchDeleteVideos();
+                }
+            });
+            
+            // 使用事件委托处理右键菜单
+            document.addEventListener('contextmenu', function(e) {
+                const videoItem = e.target.closest('.video-item');
+                if (videoItem) {
+                    e.preventDefault();
+                    const filename = videoItem.getAttribute('data-filename');
+                    if (filename) {
+                        showContextMenu(e, filename);
+                    }
+                }
+            });
+            
+            // 使用事件委托处理播放图标点击（播放视频）
+            document.addEventListener('click', function(e) {
+                const playIcon = e.target.closest('.video-icon');
+                if (playIcon) {
+                    const videoItem = playIcon.closest('.video-item');
+                    if (videoItem) {
+                        const filename = videoItem.getAttribute('data-filename');
+                        if (filename) {
+                            // 从currentVideos中找到对应的视频对象
+                            const video = currentVideos.find(v => v.name === filename);
+                            if (video) {
+                                playVideo(video);
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 使用事件委托处理缩略图点击（显示大图预览）
+            document.addEventListener('click', function(e) {
+                const thumbnail = e.target.closest('.video-thumbnail');
+                if (thumbnail) {
+                    const videoItem = thumbnail.closest('.video-item');
+                    if (videoItem) {
+                        const filename = videoItem.getAttribute('data-filename');
+                        if (filename) {
+                            showImagePreview(filename, thumbnail.src);
+                        }
+                    }
+                }
+            });
+            
+            // 使用事件委托处理复选框变化
+            document.addEventListener('change', function(e) {
+                if (e.target.type === 'checkbox' && e.target.classList.contains('video-checkbox')) {
+                    updateBatchActions();
+                }
+            });
+        });
+        
+
+    </script>
+</body>
+</html>
