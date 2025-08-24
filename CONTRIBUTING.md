@@ -1,6 +1,6 @@
 # 贡献指南
 
-感谢您对 VideoDown-Go 项目的关注！我们欢迎各种形式的贡献，包括但不限于代码贡献、文档改进、问题报告和功能建议。
+感谢您对 X-KT 视频下载器 项目的关注！我们欢迎各种形式的贡献，包括但不限于代码贡献、文档改进、问题报告和功能建议。
 
 ## 🤝 贡献方式
 
@@ -32,7 +32,7 @@
 
 ### 1. Fork 项目
 
-1. 访问 [VideoDown-Go GitHub 页面](https://github.com/oskey/VideoDown-Go)
+1. 访问 [X-KT 视频下载器 GitHub 页面](https://github.com/oskey/VideoDown-Go)
 2. 点击右上角的 "Fork" 按钮
 3. 将项目 Fork 到您的 GitHub 账户
 
@@ -280,7 +280,7 @@ Closes #123
 ## 环境信息
 - OS: Windows 10
 - Go 版本: 1.21.0
-- VideoDown-Go 版本: v1.0.0
+- X-KT 视频下载器 版本: v1.0.0
 - 浏览器: Firefox 118.0
 
 ## 错误日志
@@ -443,4 +443,4 @@ docs: 更新安装指南
 
 ---
 
-再次感谢您的贡献！每一个贡献都让 VideoDown-Go 变得更好。🙏
+再次感谢您的贡献！每一个贡献都让 X-KT 视频下载器 变得更好。🙏

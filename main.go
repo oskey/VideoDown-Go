@@ -181,6 +181,7 @@ func main() {
 
 	// 设置路由
 	http.HandleFunc("/", handleHome)
+	http.HandleFunc("/favicon.ico", handleFavicon)
 	http.HandleFunc("/ws", handleWebSocket)
 	http.HandleFunc("/run", handleRun)
 	http.HandleFunc("/stop", handleStop)
@@ -198,7 +199,7 @@ func main() {
 	http.HandleFunc("/api/app/info", handleAppInfo)
 
 	// 启动服务器
-	port := "8888"
+	port := "8889"
 	log.Printf("服务器启动在 http://127.0.0.1:%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
@@ -207,6 +208,12 @@ func main() {
 func handleHome(w http.ResponseWriter, r *http.Request) {
 	templ := template.Must(template.ParseFiles("templates/index.html"))
 	templ.Execute(w, nil)
+}
+
+// 处理favicon.ico请求
+func handleFavicon(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "image/x-icon")
+	http.ServeFile(w, r, "templates/favicon.ico")
 }
 
 // 处理WebSocket连接

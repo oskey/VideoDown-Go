@@ -39,11 +39,29 @@ set /p version=<version.txt
 echo Version: %version%
 echo.
 
-:: Build Windows version
+:: Extract numeric version (remove 'V' prefix if present)
+set numeric_version=%version:V=%
+echo Numeric version: %numeric_version%
+
+:: Update version in icon.rc file
+echo Updating version information in icon.rc...
+powershell -Command "$content = Get-Content 'icon.rc'; $version = '%numeric_version%'; $content = $content -replace 'FILEVERSION [0-9,]+', ('FILEVERSION ' + $version.Replace('.', ',') + ',0'); $content = $content -replace 'PRODUCTVERSION [0-9,]+', ('PRODUCTVERSION ' + $version.Replace('.', ',') + ',0'); $content = $content -replace 'VALUE \"FileVersion\", \"[0-9.]+\"', ('VALUE \"FileVersion\", \"' + $version + '.0\"'); $content = $content -replace 'VALUE \"ProductVersion\", \"[0-9.]+\"', ('VALUE \"ProductVersion\", \"' + $version + '.0\"'); Set-Content 'icon.rc' $content"
+if %errorlevel% neq 0 (
+    echo Warning: Failed to update version in icon.rc
+)
+echo.
+
+:: Build Windows version (with icon)
 echo Building Windows 64-bit version...
+echo Compiling resource file...
+windres -i icon.rc -o icon_windows_amd64.syso
+if %errorlevel% neq 0 (
+    echo Warning: Resource compilation failed, continuing without icon
+)
 set GOOS=windows
 set GOARCH=amd64
-go build -ldflags "-s -w -X main.Version=%version%" -o "build/VideoDown-Go-windows-amd64.exe" main.go
+:: Note: icon_windows_amd64.syso file will be automatically included by Go compiler when building the package
+go build -ldflags "-s -w -X main.Version=%version%" -o "build/VideoDown-Go-windows-amd64.exe"
 if %errorlevel% neq 0 (
     echo Error: Windows build failed
     pause
@@ -55,7 +73,7 @@ echo Windows 64-bit version build completed
 echo Building Linux 64-bit version...
 set GOOS=linux
 set GOARCH=amd64
-go build -ldflags "-s -w -X main.Version=%version%" -o "build/VideoDown-Go-linux-amd64" main.go
+go build -ldflags "-s -w -X main.Version=%version%" -o "build/VideoDown-Go-linux-amd64"
 if %errorlevel% neq 0 (    echo Error: Linux build failed
     pause
     exit /b 1
@@ -66,7 +84,7 @@ echo Linux 64-bit version build completed
 echo Building macOS 64-bit version...
 set GOOS=darwin
 set GOARCH=amd64
-go build -ldflags "-s -w -X main.Version=%version%" -o "build/VideoDown-Go-darwin-amd64" main.go
+go build -ldflags "-s -w -X main.Version=%version%" -o "build/VideoDown-Go-darwin-amd64"
 if %errorlevel% neq 0 (
     echo Warning: macOS build failed, skipping...
 ) else (
@@ -77,7 +95,7 @@ if %errorlevel% neq 0 (
 echo Building macOS ARM64 version...
 set GOOS=darwin
 set GOARCH=arm64
-go build -ldflags "-s -w" -o "build/VideoDown-Go-darwin-arm64" main.go
+go build -ldflags "-s -w" -o "build/VideoDown-Go-darwin-arm64"
 if %errorlevel% neq 0 (
     echo Warning: macOS ARM64 build failed, skipping...
 ) else (

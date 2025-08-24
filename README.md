@@ -1,6 +1,6 @@
-# VideoDown-Go 🎥
+# X-KT 视频下载器 🎥
 
-![VideoDown-Go Screenshot](https://private-user-images.githubusercontent.com/13282035/481367744-307e8eaf-b517-4a1a-8b3c-e66a056d1662.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTYwMzI4NjYsIm5iZiI6MTc1NjAzMjU2NiwicGF0aCI6Ii8xMzI4MjAzNS80ODEzNjc3NDQtMzA3ZThlYWYtYjUxNy00YTFhLThiM2MtZTY2YTA1NmQxNjYyLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MjQlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODI0VDEwNDkyNlomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTE5ZDU0ODBkNTBiNGE2MzM5ZmI4OTdkYTY4MGUwZmMzZjUzMTQ1ODQwM2M5M2E2MWZhMmRjNWIxYzg4ZDM0MDImWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.Gl1uEV0-g3FePtr2rjk0qnyYFCMCVVICAQj4lETvAro)
+![X-KT 视频下载器 Screenshot](https://private-user-images.githubusercontent.com/13282035/481367744-307e8eaf-b517-4a1a-8b3c-e66a056d1662.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTYwMzI4NjYsIm5iZiI6MTc1NjAzMjU2NiwicGF0aCI6Ii8xMzI4MjAzNS80ODEzNjc3NDQtMzA3ZThlYWYtYjUxNy00YTFhLThiM2MtZTY2YTA1NmQxNjYyLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MjQlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODI0VDEwNDkyNlomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTE5ZDU0ODBkNTBiNGE2MzM5ZmI4OTdkYTY4MGUwZmMzZjUzMTQ1ODQwM2M5M2E2MWZhMmRjNWIxYzg4ZDM0MDImWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.Gl1uEV0-g3FePtr2rjk0qnyYFCMCVVICAQj4lETvAro)
 
 一个基于 Go 语言开发的现代化视频下载和管理工具，支持多平台视频下载、智能缩略图生成和响应式 Web 界面。
 
@@ -98,7 +98,7 @@ go run main.go
 ## 🏗️ 项目结构
 
 ```
-VideoDown-Go/
+X-KT 视频下载器/
 ├── main.go              # 主程序文件
 ├── go.mod              # Go 模块文件
 ├── go.sum              # 依赖校验文件
@@ -130,9 +130,9 @@ VideoDown-Go/
 build.bat
 
 # 生成多平台版本：
-# - build/VideoDown-Go-windows-amd64.exe
-# - build/VideoDown-Go-linux-amd64
-# - build/VideoDown-Go-darwin-amd64
+# - build/X-KT 视频下载器-windows-amd64.exe
+# - build/X-KT 视频下载器-linux-amd64
+# - build/X-KT 视频下载器-darwin-amd64
 ```
 
 ### 版本更新流程
