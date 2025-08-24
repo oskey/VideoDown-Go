@@ -53,6 +53,17 @@ type WSMessage struct {
 	Type    string `json:"type"` // "log", "progress", "complete", "error"
 }
 
+// 从URL中提取主域名作为referer
+func extractReferer(urlStr string) string {
+	parsedURL, err := url.Parse(urlStr)
+	if err != nil {
+		return "" // 如果解析失败，返回空字符串
+	}
+	
+	// 返回协议+主机名，例如: https://v.qq.com
+	return parsedURL.Scheme + "://" + parsedURL.Host
+}
+
 // 中文编码转换函数
 func convertGBKToUTF8(gbkStr string) string {
 	decoder := simplifiedchinese.GBK.NewDecoder()
@@ -451,22 +462,28 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 			}
 		case "generic1":
 			// 其他通用1（最高画质）
+			referer := extractReferer(req.URL)
 			args = []string{
 				"-f", "bv*+ba/b",
 				"-S", "res,codec",
 				"--merge-output-format", "mp4",
 				"--cookies-from-browser", "firefox",
-				"--newline", // 强制每行输出后换行
-				req.URL,
 			}
+			if referer != "" {
+				args = append(args, "--referer", referer)
+			}
+			args = append(args, "--newline", req.URL) // 强制每行输出后换行
 		case "generic2":
 			// 其他通用2
+			referer := extractReferer(req.URL)
 			args = []string{
 				"--merge-output-format", "mp4",
 				"--cookies-from-browser", "firefox",
-				"--newline", // 强制每行输出后换行
-				req.URL,
 			}
+			if referer != "" {
+				args = append(args, "--referer", referer)
+			}
+			args = append(args, "--newline", req.URL) // 强制每行输出后换行
 		default:
 			// 默认情况
 			args = []string{
