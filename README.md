@@ -1,8 +1,30 @@
-# X-KT 视频下载器 🎥
+# X-KT 视频下载器 🎥 v1.2.0
 
 ![X-KT 视频下载器 Screenshot](https://private-user-images.githubusercontent.com/13282035/481367744-307e8eaf-b517-4a1a-8b3c-e66a056d1662.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTYwMzI4NjYsIm5iZiI6MTc1NjAzMjU2NiwicGF0aCI6Ii8xMzI4MjAzNS80ODEzNjc3NDQtMzA3ZThlYWYtYjUxNy00YTFhLThiM2MtZTY2YTA1NmQxNjYyLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MjQlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODI0VDEwNDkyNlomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTE5ZDU0ODBkNTBiNGE2MzM5ZmI4OTdkYTY4MGUwZmMzZjUzMTQ1ODQwM2M5M2E2MWZhMmRjNWIxYzg4ZDM0MDImWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.Gl1uEV0-g3FePtr2rjk0qnyYFCMCVVICAQj4lETvAro)
 
 一个基于 Go 语言开发的现代化视频下载和管理工具，支持多平台视频下载、智能缩略图生成和响应式 Web 界面。
+
+## 🆕 v1.2.0 新功能
+
+### 🔧 FFmpeg 集成优化
+- **自动版本检测**：新增 FFmpeg 版本显示功能，实时显示已安装的 FFmpeg 版本信息
+- **跨平台支持**：完善 Linux 和 Windows 下的 FFmpeg 检测逻辑
+- **智能下载**：根据操作系统自动选择合适的 FFmpeg 下载包格式
+  - Windows：自动下载 `.zip` 格式
+  - Linux：自动下载 `.tar.xz` 格式
+- **自动解压**：支持多种压缩格式的自动解压和安装
+
+### 🌐 网络连接改进
+- **多地址支持**：服务器现在支持多种访问方式
+  - `http://127.0.0.1:8888`
+  - `http://localhost:8888`
+  - `http://[本机IP]:8888`（局域网访问）
+- **连接稳定性**：优化服务器监听逻辑，提升网络连接稳定性
+
+### 🛠️ 跨平台兼容性
+- **Linux 支持**：完善 Linux 系统下的 FFmpeg 管理功能
+- **路径处理**：统一 Windows 和 Linux 下的可执行文件路径处理
+- **文件格式**：智能识别不同操作系统所需的文件格式
 
 ## ✨ 功能特性
 
