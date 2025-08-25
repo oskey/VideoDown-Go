@@ -52,10 +52,11 @@ type AppInfo struct {
 
 // 请求结构体
 type RunRequest struct {
-	Platform string `json:"platform"`
-	URL      string `json:"url"`
-	TaskID   string `json:"taskID"` // 添加任务ID字段
-	Config   Config `json:"config"` // 添加配置字段
+	Platform    string `json:"platform"`
+	URL         string `json:"url"`
+	TaskID      string `json:"taskID"`      // 添加任务ID字段
+	Config      Config `json:"config"`      // 添加配置字段
+	VideoFormat string `json:"videoFormat"` // 添加视频格式字段
 }
 
 // 停止请求结构体
@@ -215,6 +216,7 @@ func main() {
 	http.HandleFunc("/stop", handleStop)
 	http.HandleFunc("/api/videos", handleVideoList)
 	http.HandleFunc("/api/video/", handleVideoStream)
+	http.HandleFunc("/api/video-transcode/", handleVideoTranscode)
 	http.HandleFunc("/api/thumbnail/", handleThumbnail)
 	http.HandleFunc("/api/delete", handleDelete)
 	http.HandleFunc("/api/rename", handleRename)
@@ -328,8 +330,17 @@ func handleVideoList(w http.ResponseWriter, r *http.Request) {
 		}
 
 		filename := entry.Name()
-		// 只处理.mp4文件，排除临时文件
-		if strings.HasSuffix(strings.ToLower(filename), ".mp4") && !strings.Contains(filename, ".mp4.") {
+		// 处理常见的视频文件格式，排除临时文件
+		lowerFilename := strings.ToLower(filename)
+		videoExtensions := []string{".mp4", ".webm", ".mkv", ".flv", ".avi", ".mov"}
+		isVideoFile := false
+		for _, ext := range videoExtensions {
+			if strings.HasSuffix(lowerFilename, ext) && !strings.Contains(filename, ext+".") {
+				isVideoFile = true
+				break
+			}
+		}
+		if isVideoFile {
 			info, err := entry.Info()
 			if err != nil {
 				continue
@@ -404,8 +415,17 @@ func handleVideoStream(w http.ResponseWriter, r *http.Request) {
 	// 构建完整文件路径
 	filePath := filepath.Join(cwd, decodedFilename)
 
-	// 检查文件是否存在且为.mp4文件
-	if !strings.HasSuffix(strings.ToLower(decodedFilename), ".mp4") {
+	// 检查文件是否为支持的视频格式
+	lowerFilename := strings.ToLower(decodedFilename)
+	videoExtensions := []string{".mp4", ".webm", ".mkv", ".flv", ".avi", ".mov"}
+	isVideoFile := false
+	for _, ext := range videoExtensions {
+		if strings.HasSuffix(lowerFilename, ext) {
+			isVideoFile = true
+			break
+		}
+	}
+	if !isVideoFile {
 		http.Error(w, "Invalid file type", http.StatusBadRequest)
 		return
 	}
@@ -416,13 +436,107 @@ func handleVideoStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 根据文件扩展名设置正确的MIME类型
+	var contentType string
+	switch {
+	case strings.HasSuffix(lowerFilename, ".mp4"):
+		contentType = "video/mp4"
+	case strings.HasSuffix(lowerFilename, ".webm"):
+		contentType = "video/webm"
+	case strings.HasSuffix(lowerFilename, ".mkv"):
+		contentType = "video/x-matroska"
+	case strings.HasSuffix(lowerFilename, ".flv"):
+		contentType = "video/x-flv"
+	case strings.HasSuffix(lowerFilename, ".avi"):
+		contentType = "video/x-msvideo"
+	case strings.HasSuffix(lowerFilename, ".mov"):
+		contentType = "video/quicktime"
+	default:
+		contentType = "video/mp4" // 默认MIME类型
+	}
+
 	// 设置响应头
-	w.Header().Set("Content-Type", "video/mp4")
+	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Accept-Ranges", "bytes")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	// 提供文件服务
 	http.ServeFile(w, r, filePath)
+}
+
+// 处理需要转码的视频流
+func handleVideoTranscode(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 从URL路径中提取文件名
+	filename := strings.TrimPrefix(r.URL.Path, "/api/video-transcode/")
+	if filename == "" {
+		http.Error(w, "Filename not provided", http.StatusBadRequest)
+		return
+	}
+
+	// URL解码文件名
+	decodedFilename, err := url.QueryUnescape(filename)
+	if err != nil {
+		http.Error(w, "Invalid filename", http.StatusBadRequest)
+		return
+	}
+
+	// 获取基础文件名，防止路径遍历攻击
+	decodedFilename = filepath.Base(decodedFilename)
+
+	// 获取当前工作目录
+	cwd, err := os.Getwd()
+	if err != nil {
+		http.Error(w, "Failed to get working directory", http.StatusInternalServerError)
+		return
+	}
+
+	// 构建完整文件路径
+	filePath := filepath.Join(cwd, decodedFilename)
+
+	// 检查文件是否存在
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		http.Error(w, "File not found", http.StatusNotFound)
+		return
+	}
+
+	// 检查ffmpeg是否存在
+	ffmpegPath := getExecutablePath("ffmpeg")
+	if _, err := os.Stat(ffmpegPath); os.IsNotExist(err) {
+		http.Error(w, "FFmpeg not found", http.StatusInternalServerError)
+		return
+	}
+
+	// 设置响应头为MP4流
+	w.Header().Set("Content-Type", "video/mp4")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Cache-Control", "no-cache")
+
+	// 构建ffmpeg命令进行实时转码
+	cmd := exec.Command(ffmpegPath,
+		"-i", filePath,
+		"-c:v", "libx264",
+		"-c:a", "aac",
+		"-preset", "ultrafast",
+		"-tune", "zerolatency",
+		"-movflags", "frag_keyframe+empty_moov",
+		"-f", "mp4",
+		"pipe:1")
+
+	// 设置命令的标准输出为HTTP响应
+	cmd.Stdout = w
+	cmd.Stderr = nil // 忽略错误输出
+
+	// 执行转码命令
+	if err := cmd.Run(); err != nil {
+		log.Printf("FFmpeg转码错误: %v", err)
+		// 如果转码失败，尝试直接提供原文件
+		http.ServeFile(w, r, filePath)
+	}
 }
 
 // 向所有WebSocket客户端广播消息
@@ -497,6 +611,11 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 设置默认视频格式
+	if req.VideoFormat == "" {
+		req.VideoFormat = "mp4"
+	}
+
 	// 检查任务ID是否已存在
 	tasksMu.Lock()
 	if _, exists := activeTasks[req.TaskID]; exists {
@@ -519,9 +638,9 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		// 根据是否启用高级选项构建命令参数
 		var args []string
 		if req.Config.EnableAdvanced {
-			args = buildAdvancedCommandArgs(req.Config, req.URL)
+			args = buildAdvancedCommandArgs(req.Config, req.URL, req.VideoFormat)
 		} else {
-			args = buildCommandArgs(req.Platform, req.URL)
+			args = buildCommandArgs(req.Platform, req.URL, req.VideoFormat)
 		}
 
 		// 显示完整的拼接命令
@@ -777,9 +896,12 @@ func handleRename(w http.ResponseWriter, r *http.Request) {
 	oldFilename := filepath.Base(req.OldFilename)
 	newFilename := filepath.Base(req.NewFilename)
 
-	// 确保新文件名有.mp4扩展名
-	if !strings.HasSuffix(strings.ToLower(newFilename), ".mp4") {
-		newFilename += ".mp4"
+	// 获取原文件的扩展名
+	oldExt := filepath.Ext(oldFilename)
+	
+	// 如果新文件名没有扩展名，则使用原文件的扩展名
+	if filepath.Ext(newFilename) == "" {
+		newFilename += oldExt
 	}
 
 	// 获取当前工作目录
@@ -1126,16 +1248,20 @@ func extractReferer(urlStr string) string {
 }
 
 // 根据平台类型构建命令参数
-func buildCommandArgs(platform, url string) []string {
+func buildCommandArgs(platform, url, videoFormat string) []string {
 	var args []string
+
+	// 确保视频格式为小写
+	videoFormat = strings.ToLower(videoFormat)
 
 	switch platform {
 	case "youtube":
 		// YouTube
 		args = []string{
 			"-f", "bv*+ba/b",
-			"-S", "res,codec",
-			"--merge-output-format", "mp4",
+			"-S", "res:desc,br:desc",
+			"--merge-output-format", videoFormat,
+			"--recode-video", videoFormat,
 			"--cookies-from-browser", "firefox",
 			"--newline", // 强制每行输出后换行
 			url,
@@ -1145,7 +1271,8 @@ func buildCommandArgs(platform, url string) []string {
 		args = []string{
 			"-f", "bv*+ba/b",
 			"-S", "res:desc,br:desc",
-			"--merge-output-format", "mp4",
+			"--merge-output-format", videoFormat,
+			"--recode-video", videoFormat,
 			"--cookies-from-browser", "firefox",
 			"--newline", // 强制每行输出后换行
 			url,
@@ -1155,7 +1282,8 @@ func buildCommandArgs(platform, url string) []string {
 		args = []string{
 			"-f", "bv*+ba",
 			"-S", "res:desc,br:desc",
-			"--merge-output-format", "mp4",
+			"--merge-output-format", videoFormat,
+			"--recode-video", videoFormat,
 			"--cookies-from-browser", "firefox",
 			"--sub-langs", "all",
 			"--newline", // 强制每行输出后换行
@@ -1166,8 +1294,9 @@ func buildCommandArgs(platform, url string) []string {
 		referer := extractReferer(url)
 		args = []string{
 			"-f", "bv*+ba/b",
-			"-S", "res,codec",
-			"--merge-output-format", "mp4",
+			"-S", "res:desc,br:desc",
+			"--merge-output-format", videoFormat,
+			"--recode-video", videoFormat,
 			"--cookies-from-browser", "firefox",
 		}
 		if referer != "" {
@@ -1179,7 +1308,8 @@ func buildCommandArgs(platform, url string) []string {
 		// 其他通用2
 		referer := extractReferer(url)
 		args = []string{
-			"--merge-output-format", "mp4",
+			"--merge-output-format", videoFormat,
+			"--recode-video", videoFormat,
 			"--cookies-from-browser", "firefox",
 		}
 		if referer != "" {
@@ -1199,8 +1329,11 @@ func buildCommandArgs(platform, url string) []string {
 }
 
 // 根据高级配置构建命令参数
-func buildAdvancedCommandArgs(config Config, url string) []string {
+func buildAdvancedCommandArgs(config Config, url, videoFormat string) []string {
 	var args []string
+
+	// 确保视频格式为小写
+	videoFormat = strings.ToLower(videoFormat)
 
 	// 固定参数
 	args = append(args, "--cookies-from-browser", "firefox")
@@ -1212,9 +1345,9 @@ func buildAdvancedCommandArgs(config Config, url string) []string {
 		// 单独下载视频
 		height := extractHeightFromResolution(config.VideoResolution)
 		if height != "" {
-			args = append([]string{"-f", fmt.Sprintf("bestvideo[height<=%s]", height), "--merge-output-format", "mp4"}, args...)
+			args = append([]string{"-f", fmt.Sprintf("bestvideo[height<=%s]", height), "--merge-output-format", videoFormat, "--recode-video", videoFormat}, args...)
 		} else {
-			args = append([]string{"-f", "bestvideo", "--merge-output-format", "mp4"}, args...)
+			args = append([]string{"-f", "bestvideo", "--merge-output-format", videoFormat, "--recode-video", videoFormat}, args...)
 		}
 	} else if config.SeparateDownload == "audio" {
 		// 单独下载音频
@@ -1227,11 +1360,11 @@ func buildAdvancedCommandArgs(config Config, url string) []string {
 		// 常规下载类型
 		switch config.DownloadType {
 		case "bestQuality":
-			args = append([]string{"-f", "bestvideo", "--merge-output-format", "mp4"}, args...)
+			args = append([]string{"-f", "bestvideo", "--merge-output-format", videoFormat, "--recode-video", videoFormat}, args...)
 		case "bestAudio":
 			args = append([]string{"-f", "bestaudio"}, args...)
 		case "bestMerge":
-			args = append([]string{"-f", "bestvideo+bestaudio", "--merge-output-format", "mp4"}, args...)
+			args = append([]string{"-f", "bv*+ba/b", "-s", " res:desc,br:desc", "--merge-output-format", videoFormat, "--recode-video", videoFormat}, args...)
 		}
 	}
 
@@ -1976,7 +2109,7 @@ func extractZipFFmpeg(zipPath, taskID, binDir string) error {
 			} else if idx := strings.LastIndex(f.Name, "\\bin\\"); idx != -1 {
 				fileName = f.Name[idx+5:] // 跳过"\\bin\\"
 			}
-			
+
 			// 跳过目录条目和空文件名
 			if fileName != "" && !f.FileInfo().IsDir() {
 				binFiles = append(binFiles, f)

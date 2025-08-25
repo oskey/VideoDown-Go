@@ -702,6 +702,23 @@
             flex-shrink: 0;
         }
 
+        /* 全选复选框样式 */
+        .select-all-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            user-select: none;
+        }
+        
+        .select-all-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
         .video-thumbnail {
             width: 160px;
             height: 90px;
@@ -1757,6 +1774,17 @@
                                 <option value="generic2">其他通用2</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label for="formatSelect">视频格式:</label>
+                            <select id="formatSelect" class="form-select">
+                                <option value="webm">WebM</option>
+                                <option value="mp4" selected>MP4</option>
+                                <option value="mkv">MKV</option>
+                                <option value="flv">FLV</option>
+                                <option value="avi">AVI</option>
+                                <option value="mov">MOV</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="button-group">
                         <button class="btn btn-secondary" id="advancedButton">
@@ -1793,6 +1821,11 @@
                 </div>
                 <div class="video-list" id="videoList">
                     <div class="batch-actions" id="batchActions">
+                        <label class="select-all-label">
+                            <input type="checkbox" id="selectAllCheckbox" class="select-all-checkbox">
+                            <span class="checkmark"></span>
+                            全选
+                        </label>
                         <button class="batch-btn batch-delete-btn" id="batchDeleteBtn">
                             <span class="material-symbols-rounded">delete</span>
                             删除选中项 (<span id="selectedCount">0</span>)
@@ -2452,6 +2485,12 @@
             logOutput.scrollTop = logOutput.scrollHeight;
         }
         
+        // 获取当前选择的视频格式
+        function getSelectedVideoFormat() {
+            const formatSelect = document.getElementById('formatSelect');
+            return formatSelect ? formatSelect.value : 'mp4';
+        }
+        
         // 运行按钮点击事件
         runButton.addEventListener('click', function() {
             if (isRunning) {
@@ -2463,6 +2502,7 @@
             // 获取参数
             const platform = document.getElementById('platformSelect').value;
             const url = document.getElementById('urlInput').value.trim();
+            const videoFormat = getSelectedVideoFormat();
             
             // 验证网址是否为空
             if (!url) {
@@ -2492,7 +2532,8 @@
                     platform: platform,
                     url: url,
                     taskID: taskID,
-                    config: currentConfig
+                    config: currentConfig,
+                    videoFormat: videoFormat
                 })
             })
             .then(response => {
@@ -2614,7 +2655,20 @@
             
             // 检查videos是否为null、undefined或空数组
             if (!videos || videos.length === 0) {
-                videoList.innerHTML = '<div class="batch-actions" id="batchActions"><button class="batch-btn batch-delete-btn" id="batchDeleteBtn"><span class="material-symbols-rounded">delete</span>删除选中项 (<span id="selectedCount">0</span>)</button></div><div class="video-placeholder" id="videoPlaceholder">暂无视频文件</div>';
+                videoList.innerHTML = `
+                    <div class="batch-actions" id="batchActions">
+                        <label class="select-all-label">
+                            <input type="checkbox" id="selectAllCheckbox" class="select-all-checkbox">
+                            <span class="checkmark"></span>
+                            全选
+                        </label>
+                        <button class="batch-btn batch-delete-btn" id="batchDeleteBtn">
+                            <span class="material-symbols-rounded">delete</span>
+                            删除选中项 (<span id="selectedCount">0</span>)
+                        </button>
+                    </div>
+                    <div class="video-placeholder" id="videoPlaceholder">暂无视频文件</div>
+                `;
                 // 使用事件委托，不需要重新绑定
                 return;
             }
@@ -2627,6 +2681,11 @@
             // 清空现有内容并重新创建批量操作区域
             videoList.innerHTML = `
                 <div class="batch-actions" id="batchActions">
+                    <label class="select-all-label">
+                        <input type="checkbox" id="selectAllCheckbox" class="select-all-checkbox">
+                        <span class="checkmark"></span>
+                        全选
+                    </label>
                     <button class="batch-btn batch-delete-btn" id="batchDeleteBtn">
                         <span class="material-symbols-rounded">delete</span>
                         删除选中项 (<span id="selectedCount">0</span>)
@@ -2724,7 +2783,20 @@
         // 播放视频
         function playVideo(video) {
             videoModalTitle.textContent = video.name;
-            videoPlayer.src = `/api/video/${encodeURIComponent(video.name)}`;
+            
+            // 检查文件格式，判断是否需要转码
+            const filename = video.name.toLowerCase();
+            const needsTranscode = filename.endsWith('.flv') || filename.endsWith('.avi');
+            
+            if (needsTranscode) {
+                // 使用转码API
+                videoPlayer.src = `/api/video-transcode/${encodeURIComponent(video.name)}`;
+                console.log(`使用转码播放: ${video.name}`);
+            } else {
+                // 直接播放
+                videoPlayer.src = `/api/video/${encodeURIComponent(video.name)}`;
+            }
+            
             videoModal.style.display = 'flex';
             
             // 自动开始播放
@@ -2751,8 +2823,10 @@
         // 批量操作相关函数
         function updateBatchActions() {
             const checkboxes = document.querySelectorAll('.video-checkbox:checked');
+            const allCheckboxes = document.querySelectorAll('.video-checkbox');
             const batchActions = document.getElementById('batchActions');
             const selectedCount = document.getElementById('selectedCount');
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
             
             if (checkboxes.length > 0) {
                 batchActions.classList.add('show');
@@ -2760,6 +2834,23 @@
             } else {
                 batchActions.classList.remove('show');
                 selectedCount.textContent = '0';
+            }
+            
+            // 更新全选复选框状态
+            if (selectAllCheckbox) {
+                if (allCheckboxes.length === 0) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                } else if (checkboxes.length === allCheckboxes.length) {
+                    selectAllCheckbox.checked = true;
+                    selectAllCheckbox.indeterminate = false;
+                } else if (checkboxes.length > 0) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = true;
+                } else {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                }
             }
         }
 
@@ -2853,8 +2944,13 @@
             const renameCancelBtn = document.getElementById('renameCancelBtn');
             const renameModalClose = document.getElementById('renameModalClose');
             
-            // 设置初始值
-            newFileNameInput.value = filename.replace('.mp4', '');
+            // 获取当前文件的扩展名
+            const currentFormat = getSelectedVideoFormat();
+            const fileExtension = '.' + currentFormat;
+            
+            // 设置初始值，移除当前扩展名
+            const nameWithoutExt = filename.replace(/\.(mp4|webm|mkv|flv|avi|mov)$/i, '');
+            newFileNameInput.value = nameWithoutExt;
             renameModal.style.display = 'flex';
             newFileNameInput.focus();
             newFileNameInput.select();
@@ -2876,8 +2972,8 @@
                     return;
                 }
                 
-                if (newName !== filename.replace('.mp4', '')) {
-                    const newFilename = newName + '.mp4';
+                if (newName !== nameWithoutExt) {
+                    const newFilename = newName + fileExtension;
                     
                     // 检查文件名是否已存在
                     const existingVideos = document.querySelectorAll('.video-item');
@@ -3176,6 +3272,18 @@
                 if (e.target.closest('#batchDeleteBtn')) {
                     e.preventDefault();
                     batchDeleteVideos();
+                }
+            });
+            
+            // 使用事件委托处理全选复选框点击
+            document.addEventListener('change', function(e) {
+                if (e.target.id === 'selectAllCheckbox') {
+                    const isChecked = e.target.checked;
+                    const videoCheckboxes = document.querySelectorAll('.video-checkbox');
+                    videoCheckboxes.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+                    updateBatchActions();
                 }
             });
             

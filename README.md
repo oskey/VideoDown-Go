@@ -1,10 +1,21 @@
-# X-KT 视频下载器 🎥 v1.2.0
+# X-KT 视频下载器 🎥 v1.3.0
 
 ![X-KT 视频下载器 Screenshot](https://private-user-images.githubusercontent.com/13282035/481367744-307e8eaf-b517-4a1a-8b3c-e66a056d1662.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTYwMzI4NjYsIm5iZiI6MTc1NjAzMjU2NiwicGF0aCI6Ii8xMzI4MjAzNS80ODEzNjc3NDQtMzA3ZThlYWYtYjUxNy00YTFhLThiM2MtZTY2YTA1NmQxNjYyLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MjQlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODI0VDEwNDkyNlomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTE5ZDU0ODBkNTBiNGE2MzM5ZmI4OTdkYTY4MGUwZmMzZjUzMTQ1ODQwM2M5M2E2MWZhMmRjNWIxYzg4ZDM0MDImWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.Gl1uEV0-g3FePtr2rjk0qnyYFCMCVVICAQj4lETvAro)
 
 一个基于 Go 语言开发的现代化视频下载和管理工具，支持多平台视频下载、智能缩略图生成和响应式 Web 界面。
 
-## 🆕 v1.2.0 新功能
+## 🆕 v1.3.0 新功能
+
+### 📋 批量操作增强
+- **视频格式选择**：新增视频播放在线解码及保存格式选择，无论下载的视频格式是什么，通过FFmpeg进行转码和编码
+- **全选功能**：新增全选复选框，支持一键选择/取消选择所有视频
+- **智能状态同步**：全选复选框会根据当前选中状态智能显示
+  - 全部选中：显示为选中状态
+  - 部分选中：显示为半选状态（indeterminate）
+  - 全部未选：显示为未选状态
+- **用户体验优化**：批量操作更加便捷，提升视频管理效率
+
+## 🔄 v1.2.0 更新内容
 
 ### 🔧 FFmpeg 集成优化
 - **自动版本检测**：新增 FFmpeg 版本显示功能，实时显示已安装的 FFmpeg 版本信息
@@ -113,9 +124,13 @@ go run main.go
 - **排序**：支持按名称、大小、时间排序
 
 ### 批量操作
-1. 勾选需要操作的视频
-2. 点击「删除选中项」进行批量删除
-3. 支持全选/取消全选操作
+1. **全选功能**：使用全选复选框一键选择/取消选择所有视频
+2. **单项选择**：勾选需要操作的视频
+3. **批量删除**：点击「删除选中项」进行批量删除
+4. **智能状态**：全选复选框会根据当前选中情况智能显示状态
+   - 全部选中时显示为选中状态
+   - 部分选中时显示为半选状态
+   - 全部未选时显示为未选状态
 
 ## 🌐 支持的下载平台
 
