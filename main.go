@@ -27,7 +27,7 @@ import (
 
 // 版本信息变量（编译时注入）
 var (
-	Version = "V1.2.0" // 默认版本号，可通过 -ldflags 覆盖
+	Version = "V1.3.2" // 默认版本号，可通过 -ldflags 覆盖
 )
 
 // 获取可执行文件路径（统一处理，不区分操作系统）
@@ -199,6 +199,8 @@ var (
 	tasksMu       sync.Mutex                              // 保护activeTasks的互斥锁
 	taskFiles     = make(map[string]string)               // 存储任务对应的文件名
 	filesMu       sync.Mutex                              // 保护taskFiles的互斥锁
+	taskFormats   = make(map[string]string)               // 存储任务对应的视频格式
+	formatsMu     sync.Mutex                              // 保护taskFormats的互斥锁
 	updateTasks   = make(map[string]context.CancelFunc)   // 存储活跃的更新任务
 	updateTasksMu sync.Mutex                              // 保护updateTasks的互斥锁
 )
@@ -662,10 +664,14 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		// 设置环境变量禁用缓冲
 		cmd.Env = append(os.Environ(), "PYTHONUNBUFFERED=1")
 
-		// 保存任务命令引用
+		// 保存任务命令引用和视频格式
 		tasksMu.Lock()
 		activeTasks[req.TaskID] = cmd
 		tasksMu.Unlock()
+
+		formatsMu.Lock()
+		taskFormats[req.TaskID] = req.VideoFormat
+		formatsMu.Unlock()
 
 		// 将stderr重定向到stdout，这样所有输出都从一个管道读取
 		stdout, err := cmd.StdoutPipe()
@@ -714,7 +720,7 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		// 等待命令完成
 		cmdErr := cmd.Wait()
 
-		// 清理任务引用和文件名
+		// 清理任务引用、文件名和视频格式
 		tasksMu.Lock()
 		delete(activeTasks, req.TaskID)
 		tasksMu.Unlock()
@@ -722,6 +728,10 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		filesMu.Lock()
 		delete(taskFiles, req.TaskID)
 		filesMu.Unlock()
+
+		formatsMu.Lock()
+		delete(taskFormats, req.TaskID)
+		formatsMu.Unlock()
 
 		// 等待所有输出读取完成
 		wg.Wait()
@@ -1043,10 +1053,19 @@ func handleStop(w http.ResponseWriter, r *http.Request) {
 	}
 	tasksMu.Unlock()
 
-	// 获取任务对应的文件名（用于删除未完成的文件）
+	// 获取任务对应的文件名和视频格式（用于删除未完成的文件）
 	filesMu.Lock()
 	filename := taskFiles[req.TaskID]
 	filesMu.Unlock()
+
+	formatsMu.Lock()
+	videoFormat := taskFormats[req.TaskID]
+	formatsMu.Unlock()
+
+	// 如果没有找到视频格式，使用默认的mp4
+	if videoFormat == "" {
+		videoFormat = "mp4"
+	}
 
 	// 终止进程
 	if err := cmd.Process.Kill(); err != nil {
@@ -1105,11 +1124,16 @@ func handleStop(w http.ResponseWriter, r *http.Request) {
 
 				// 检查文件名是否以基础文件名开头
 				if strings.HasPrefix(fileName, baseName) {
-					// 只删除以.mp4结尾但后面还有额外后缀的文件
-					// 例如：xxx.mp4.part, xxx.mp4.temp 等，但不删除 xxx.mp4
-					if strings.Contains(fileName, ".mp4.") {
-						sendMessageToTask(req.TaskID, fmt.Sprintf("[调试] 文件名匹配基础名称: %s", fileName), "log")
-						sendMessageToTask(req.TaskID, fmt.Sprintf("[调试] 文件符合删除条件（.mp4后有额外后缀）: %s", fileName), "log")
+					// 从基础文件名中提取实际的文件扩展名
+					// 例如：钟馗传说 01 [XNDMzNzc2MTky].mp4 -> .mp4
+					actualExt := filepath.Ext(baseName)
+					if actualExt != "" {
+						// 根据实际文件扩展名检测临时文件
+						// 例如：xxx.mp4.part, xxx.mp4.temp, xxx.mp4.ytdl 等，但不删除 xxx.mp4
+						formatPattern := fmt.Sprintf("%s.", actualExt)
+						if strings.Contains(fileName, formatPattern) && fileName != baseName {
+								sendMessageToTask(req.TaskID, fmt.Sprintf("[调试] 文件名匹配基础名称: %s", fileName), "log")
+								sendMessageToTask(req.TaskID, fmt.Sprintf("[调试] 文件符合删除条件（%s后有额外后缀）: %s", actualExt, fileName), "log")
 
 						fullPath := filepath.Join(dir, fileName)
 						if _, err := os.Stat(fullPath); err == nil {
@@ -1120,8 +1144,9 @@ func handleStop(w http.ResponseWriter, r *http.Request) {
 							} else {
 								sendMessageToTask(req.TaskID, fmt.Sprintf("删除文件失败 %s: %v", fileName, removeErr), "error")
 							}
-						} else {
-							sendMessageToTask(req.TaskID, fmt.Sprintf("[调试] 文件不存在或无法访问: %s, 错误: %v", fullPath, err), "log")
+							} else {
+								sendMessageToTask(req.TaskID, fmt.Sprintf("[调试] 文件不存在或无法访问: %s, 错误: %v", fullPath, err), "log")
+							}
 						}
 					}
 				}
@@ -1147,6 +1172,10 @@ func handleStop(w http.ResponseWriter, r *http.Request) {
 	filesMu.Lock()
 	delete(taskFiles, req.TaskID)
 	filesMu.Unlock()
+
+	formatsMu.Lock()
+	delete(taskFormats, req.TaskID)
+	formatsMu.Unlock()
 
 	sendMessageToTask(req.TaskID, "COMMAND_FINISHED", "complete") // 发送完成信号
 
