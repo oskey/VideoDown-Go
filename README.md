@@ -67,7 +67,11 @@ go run main.go
 
 本项目基于 **yt-dlp** 和 **FFmpeg** 构建，使用前请确保：
 
-1. **工具配置**：需要自行下载 `yt-dlp.exe` 并放入项目根目录的 `bin/` 文件夹中
+1. **工具配置**：
+   - **自动下载**：可以通过程序右上角的下载按钮自动下载 yt-dlp 和 FFmpeg
+   - **手动下载**：也可以自行下载并放入项目根目录的 `bin/` 文件夹中
+     - yt-dlp 下载地址：https://github.com/yt-dlp/yt-dlp/releases
+     - FFmpeg 下载地址：https://ffmpeg.org/download.html
 2. **浏览器配置**：推荐使用 **Firefox** 浏览器登录相关视频网站
    - yt-dlp 会自动通过 Firefox 获取 Cookie 信息
    - 这样可以确保下载到最高品质的视频内容
