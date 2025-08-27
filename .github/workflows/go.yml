@@ -330,7 +330,7 @@ jobs:
         echo "   - **自动下载**：可以通过程序右上角的下载按钮自动下载 yt-dlp 和 FFmpeg" >> CHANGELOG.md
         echo "   - **手动下载**：也可以自行下载并放入项目根目录的 \`bin/\` 文件夹中" >> CHANGELOG.md
         echo "     - yt-dlp 下载地址：https://github.com/yt-dlp/yt-dlp/releases" >> CHANGELOG.md
-        echo "     - FFmpeg 下载地址：https://ffmpeg.org/download.html" >> CHANGELOG.md
+        echo "     - FFmpeg 下载地址：https://github.com/yt-dlp/FFmpeg-Builds" >> CHANGELOG.md
         echo "2. **浏览器配置**：推荐使用 **Firefox** 浏览器登录相关视频网站" >> CHANGELOG.md
         echo "   - yt-dlp 会自动通过 Firefox 获取 Cookie 信息" >> CHANGELOG.md
         echo "   - 这样可以确保下载到最高品质的视频内容" >> CHANGELOG.md
