@@ -56,8 +56,10 @@ jobs:
           
           # 检查标签是否已存在
           if git tag -l | grep -q "^$NEW_VERSION$"; then
-            echo "Tag $NEW_VERSION already exists, skipping tag creation"
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Tag $NEW_VERSION already exists, will skip tag creation but continue build"
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
           fi
         else
           echo "Version file not changed"
@@ -101,7 +103,7 @@ jobs:
         fi
 
     - name: Create and push tag
-      if: steps.check_version.outputs.changed == 'true'
+      if: steps.check_version.outputs.changed == 'true' && steps.check_version.outputs.tag_exists != 'true'
       run: |
         VERSION=${{ steps.check_version.outputs.version }}
         echo "Creating tag: $VERSION"
