@@ -66,41 +66,7 @@ jobs:
           echo "changed=false" >> $GITHUB_OUTPUT
         fi
 
-    - name: Update README.md version
-      if: steps.check_version.outputs.changed == 'true'
-      run: |
-        VERSION=${{ steps.check_version.outputs.version }}
-        README_PATH="README.md"
-        
-        if [ -f "$README_PATH" ]; then
-          # 更新标题中的版本号 (第一行)
-          sed -i "1s/# X-KT 视频下载器 🎥 v[0-9]\+\.[0-9]\+\.[0-9]\+/# X-KT 视频下载器 🎥 $VERSION/" "$README_PATH"
-          
-          # 更新其他可能的版本引用
-          sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+ BUG修复/$VERSION BUG修复/g" "$README_PATH"
-          sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+ 新功能/$VERSION 新功能/g" "$README_PATH"
-          sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+ 更新内容/$VERSION 更新内容/g" "$README_PATH"
-          
-          echo "Updated README.md version to $VERSION"
-        else
-          echo "README.md not found"
-        fi
 
-    - name: Commit README.md changes
-      if: steps.check_version.outputs.changed == 'true'
-      run: |
-        # 配置 Git 用户信息
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        
-        git add README.md
-        if git diff --staged --quiet; then
-          echo "No changes to commit in README.md"
-        else
-          git commit -m "docs: update README.md version to ${{ steps.check_version.outputs.version }}"
-          git push origin ${{ github.ref_name }}
-          echo "Committed and pushed README.md version update"
-        fi
 
     - name: Create and push tag
       if: steps.check_version.outputs.changed == 'true' && steps.check_version.outputs.tag_exists != 'true'
@@ -236,11 +202,48 @@ jobs:
         echo "Built: $BINARY_NAME"
         ls -la "$BINARY_NAME"
 
+    - name: Create package
+      run: |
+        BINARY_NAME="${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
+        PACKAGE_NAME="${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}"
+        
+        # 创建打包目录
+        mkdir -p "$PACKAGE_NAME"
+        
+        # 复制二进制文件
+        cp "$BINARY_NAME" "$PACKAGE_NAME/"
+        
+        # 创建必需的 bin 目录（空目录）
+        mkdir -p "$PACKAGE_NAME/bin"
+        
+        # 复制 templates 目录
+        if [ -d "templates" ]; then
+          cp -r templates "$PACKAGE_NAME/"
+        fi
+        
+        # 复制 favicon.ico
+        if [ -f "favicon.ico" ]; then
+          cp favicon.ico "$PACKAGE_NAME/"
+        fi
+        
+        # 创建压缩包
+        if [[ "${{ matrix.goos }}" == "windows" ]]; then
+          zip -r "$PACKAGE_NAME.zip" "$PACKAGE_NAME"
+          echo "Created: $PACKAGE_NAME.zip"
+          ls -la "$PACKAGE_NAME.zip"
+        else
+          tar -czf "$PACKAGE_NAME.tar.gz" "$PACKAGE_NAME"
+          echo "Created: $PACKAGE_NAME.tar.gz"
+          ls -la "$PACKAGE_NAME.tar.gz"
+        fi
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
-        path: ${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}
+        path: |
+          ${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}.zip
+          ${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
         retention-days: 30
 
   # 发布任务（仅在推送标签时触发）
@@ -263,7 +266,10 @@ jobs:
     - name: Prepare release files
       run: |
         mkdir -p ./release
-        find ./artifacts -name "${{ env.APP_NAME }}-*" -type f -exec cp {} ./release/ \;
+        # 复制所有压缩包文件
+        find ./artifacts -name "*.zip" -type f -exec cp {} ./release/ \;
+        find ./artifacts -name "*.tar.gz" -type f -exec cp {} ./release/ \;
+        echo "Release files prepared:"
         ls -la ./release/
 
     - name: Generate changelog
@@ -309,7 +315,7 @@ jobs:
         echo "" >> CHANGELOG.md
         echo "### 🔧 安装说明" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "1. 根据您的操作系统下载对应的二进制文件" >> CHANGELOG.md
+        echo "1. 根据您的操作系统下载对应的压缩包" >> CHANGELOG.md
         echo "2. 解压并运行程序" >> CHANGELOG.md
         echo "3. 访问 http://localhost:8888 开始使用" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
