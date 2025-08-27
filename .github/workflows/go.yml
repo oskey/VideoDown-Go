@@ -207,37 +207,25 @@ jobs:
         BINARY_NAME="${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
         PACKAGE_NAME="${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}"
         
-        # 清理并创建打包目录
-        rm -rf "$PACKAGE_NAME"
+        # 创建打包目录
         mkdir -p "$PACKAGE_NAME"
         
         # 复制二进制文件
         cp "$BINARY_NAME" "$PACKAGE_NAME/"
         
-        # 创建必需的 bin 目录（空目录）
-        mkdir -p "$PACKAGE_NAME/bin"
+        # 复制 bin 目录
+        cp -r bin "$PACKAGE_NAME/"
         
         # 复制 templates 目录
-        if [ -d "templates" ]; then
-          cp -r templates "$PACKAGE_NAME/"
-        fi
-        
-        # 复制 favicon.ico（检查是否为文件）
-        if [ -f "favicon.ico" ]; then
-          cp favicon.ico "$PACKAGE_NAME/"
-        elif [ -f "templates/favicon.ico" ]; then
-          cp templates/favicon.ico "$PACKAGE_NAME/"
-        fi
+        cp -r templates "$PACKAGE_NAME/"
         
         # 创建压缩包
         if [[ "${{ matrix.goos }}" == "windows" ]]; then
           zip -r "$PACKAGE_NAME.zip" "$PACKAGE_NAME"
           echo "Created: $PACKAGE_NAME.zip"
-          ls -la "$PACKAGE_NAME.zip"
         else
           tar -czf "$PACKAGE_NAME.tar.gz" "$PACKAGE_NAME"
           echo "Created: $PACKAGE_NAME.tar.gz"
-          ls -la "$PACKAGE_NAME.tar.gz"
         fi
 
     - name: Upload artifacts
