@@ -234,8 +234,8 @@ jobs:
       with:
         name: ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
         path: |
-          ${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}.zip
-          ${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+          *.zip
+          *.tar.gz
         retention-days: 30
 
   # 发布任务（仅在推送标签时触发）
