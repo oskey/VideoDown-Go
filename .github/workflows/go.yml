@@ -207,7 +207,8 @@ jobs:
         BINARY_NAME="${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
         PACKAGE_NAME="${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}"
         
-        # 创建打包目录
+        # 清理并创建打包目录
+        rm -rf "$PACKAGE_NAME"
         mkdir -p "$PACKAGE_NAME"
         
         # 复制二进制文件
