@@ -207,25 +207,22 @@ jobs:
         BINARY_NAME="${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
         PACKAGE_NAME="${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}"
         
-        # 清理并创建打包目录
-        rm -rf "$PACKAGE_NAME"
-        mkdir -p "$PACKAGE_NAME"
-        
-        # 复制二进制文件
-        cp "$BINARY_NAME" "$PACKAGE_NAME/"
-        
-        # 复制 bin 目录
-        cp -r bin "$PACKAGE_NAME/"
-        
-        # 复制 templates 目录
-        cp -r templates "$PACKAGE_NAME/"
-        
-        # 创建压缩包
+        # 直接打包文件和目录
         if [[ "${{ matrix.goos }}" == "windows" ]]; then
-          zip -r "$PACKAGE_NAME.zip" "$PACKAGE_NAME"
+          # Windows 平台创建 ZIP 包
+          if [ -d "bin" ] && [ "$(ls -A bin 2>/dev/null)" ]; then
+            zip -r "$PACKAGE_NAME.zip" "$BINARY_NAME" bin templates
+          else
+            zip -r "$PACKAGE_NAME.zip" "$BINARY_NAME" templates
+          fi
           echo "Created: $PACKAGE_NAME.zip"
         else
-          tar -czf "$PACKAGE_NAME.tar.gz" "$PACKAGE_NAME"
+          # Linux/macOS 平台创建 tar.gz 包
+          if [ -d "bin" ] && [ "$(ls -A bin 2>/dev/null)" ]; then
+            tar -czf "$PACKAGE_NAME.tar.gz" "$BINARY_NAME" bin templates
+          else
+            tar -czf "$PACKAGE_NAME.tar.gz" "$BINARY_NAME" templates
+          fi
           echo "Created: $PACKAGE_NAME.tar.gz"
         fi
 
