@@ -198,6 +198,29 @@ jobs:
         CGO_ENABLED: 0
       run: |
         BINARY_NAME="${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
+        
+        # Windows 平台需要处理资源文件
+        if [[ "${{ matrix.goos }}" == "windows" ]]; then
+          # 提取数字版本号（去掉V前缀）
+          NUMERIC_VERSION="${{ steps.version.outputs.version }}"
+          NUMERIC_VERSION="${NUMERIC_VERSION#V}"
+          echo "Numeric version: $NUMERIC_VERSION"
+          
+          # 更新 icon.rc 中的版本信息
+          sed -i "s/FILEVERSION [0-9,]\+/FILEVERSION ${NUMERIC_VERSION//./,},0/g" icon.rc
+          sed -i "s/PRODUCTVERSION [0-9,]\+/PRODUCTVERSION ${NUMERIC_VERSION//./,},0/g" icon.rc
+          sed -i "s/VALUE \"FileVersion\", \"[0-9.]\+\"/VALUE \"FileVersion\", \"${NUMERIC_VERSION}.0\"/g" icon.rc
+          sed -i "s/VALUE \"ProductVersion\", \"[0-9.]\+\"/VALUE \"ProductVersion\", \"${NUMERIC_VERSION}.0\"/g" icon.rc
+          
+          # 编译资源文件
+          if command -v windres >/dev/null 2>&1; then
+            windres -i icon.rc -o icon_windows_amd64.syso
+            echo "Resource file compiled successfully"
+          else
+            echo "Warning: windres not found, building without icon"
+          fi
+        fi
+        
         go build -ldflags "-s -w -X main.Version=${{ steps.version.outputs.version }}" -o "$BINARY_NAME" .
         echo "Built: $BINARY_NAME"
         ls -la "$BINARY_NAME"
@@ -207,21 +230,21 @@ jobs:
         BINARY_NAME="${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
         PACKAGE_NAME="${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}"
         
-        # 直接打包文件和目录
+        # 直接打包文件和目录（排除源文件）
         if [[ "${{ matrix.goos }}" == "windows" ]]; then
           # Windows 平台创建 ZIP 包
           if [ -d "bin" ] && [ "$(ls -A bin 2>/dev/null)" ]; then
-            zip -r "$PACKAGE_NAME.zip" "$BINARY_NAME" bin templates
+            zip -r "$PACKAGE_NAME.zip" "$BINARY_NAME" bin templates -x "*.rc" "*.syso" "*.go" "*.mod" "*.sum"
           else
-            zip -r "$PACKAGE_NAME.zip" "$BINARY_NAME" templates
+            zip -r "$PACKAGE_NAME.zip" "$BINARY_NAME" templates -x "*.rc" "*.syso" "*.go" "*.mod" "*.sum"
           fi
           echo "Created: $PACKAGE_NAME.zip"
         else
           # Linux/macOS 平台创建 tar.gz 包
           if [ -d "bin" ] && [ "$(ls -A bin 2>/dev/null)" ]; then
-            tar -czf "$PACKAGE_NAME.tar.gz" "$BINARY_NAME" bin templates
+            tar --exclude="*.rc" --exclude="*.syso" --exclude="*.go" --exclude="*.mod" --exclude="*.sum" -czf "$PACKAGE_NAME.tar.gz" "$BINARY_NAME" bin templates
           else
-            tar -czf "$PACKAGE_NAME.tar.gz" "$BINARY_NAME" templates
+            tar --exclude="*.rc" --exclude="*.syso" --exclude="*.go" --exclude="*.mod" --exclude="*.sum" -czf "$PACKAGE_NAME.tar.gz" "$BINARY_NAME" templates
           fi
           echo "Created: $PACKAGE_NAME.tar.gz"
         fi
