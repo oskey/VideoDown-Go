@@ -201,6 +201,10 @@ jobs:
         
         # Windows 平台需要处理资源文件
         if [[ "${{ matrix.goos }}" == "windows" ]]; then
+          # 安装 mingw-w64 工具链（包含 windres）
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64
+          
           # 提取数字版本号（去掉V前缀）
           NUMERIC_VERSION="${{ steps.version.outputs.version }}"
           NUMERIC_VERSION="${NUMERIC_VERSION#V}"
@@ -212,12 +216,25 @@ jobs:
           sed -i "s/VALUE \"FileVersion\", \"[0-9.]\+\"/VALUE \"FileVersion\", \"${NUMERIC_VERSION}.0\"/g" icon.rc
           sed -i "s/VALUE \"ProductVersion\", \"[0-9.]\+\"/VALUE \"ProductVersion\", \"${NUMERIC_VERSION}.0\"/g" icon.rc
           
+          # 根据架构选择合适的 windres 工具
+          SYSO_FILE="icon_windows_${{ matrix.goarch }}.syso"
+          if [[ "${{ matrix.goarch }}" == "amd64" ]]; then
+            WINDRES_CMD="x86_64-w64-mingw32-windres"
+          elif [[ "${{ matrix.goarch }}" == "arm64" ]]; then
+            # ARM64 需要安装额外的工具链
+            sudo apt-get install -y gcc-aarch64-linux-gnu
+            # 对于 ARM64，我们使用 amd64 的资源文件（Go 会处理兼容性）
+            WINDRES_CMD="x86_64-w64-mingw32-windres"
+            SYSO_FILE="icon_windows_amd64.syso"
+          fi
+          
           # 编译资源文件
-          if command -v windres >/dev/null 2>&1; then
-            windres -i icon.rc -o icon_windows_amd64.syso
-            echo "Resource file compiled successfully"
+          if command -v "$WINDRES_CMD" >/dev/null 2>&1; then
+            "$WINDRES_CMD" -i icon.rc -o "$SYSO_FILE"
+            echo "Resource file compiled successfully: $SYSO_FILE"
+            ls -la "$SYSO_FILE"
           else
-            echo "Warning: windres not found, building without icon"
+            echo "Warning: $WINDRES_CMD not found, building without icon"
           fi
         fi
         
