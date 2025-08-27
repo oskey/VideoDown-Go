@@ -4,6 +4,12 @@
 
 name: Build and Release
 
+# 为 GitHub Actions 授予必要的权限
+permissions:
+  contents: write  # 允许推送标签和提交
+  actions: read    # 允许读取 actions
+  checks: write    # 允许写入检查状态
+
 on:
   push:
     branches: [ "main", "master" ]
