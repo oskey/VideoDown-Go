@@ -1,30 +1,144 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+# VideoDown-Go 自动构建和发布工作流
+# 支持多平台编译、自动标签发布和版本管理
+# 已更新所有 actions 到最新版本 (2025-01-16)
 
-name: Go
+name: Build and Release
 
 on:
+  # 推送到主分支时进行构建测试
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
+    paths:
+      - 'version.txt'
+      - '**/*.go'
+      - 'go.mod'
+      - 'go.sum'
+  # PR时进行构建测试
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
+  # 推送标签时自动发布
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'V*.*.*'
+
+env:
+  GO_VERSION: '1.21'
+  APP_NAME: 'VideoDown-Go'
 
 jobs:
-
-  build:
+  # 检查版本变化并自动创建标签
+  auto-tag:
+    name: Auto Create Tag
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    outputs:
+      version_changed: ${{ steps.check_version.outputs.changed }}
+      new_version: ${{ steps.check_version.outputs.version }}
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2  # 获取最近两次提交以比较变化
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check version changes
+      id: check_version
+      run: |
+        # 检查 version.txt 是否在本次提交中被修改
+        if git diff --name-only HEAD~1 HEAD | grep -q "version.txt"; then
+          NEW_VERSION=$(cat version.txt)
+          echo "Version file changed to: $NEW_VERSION"
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          
+          # 检查标签是否已存在
+          if git tag -l | grep -q "^$NEW_VERSION$"; then
+            echo "Tag $NEW_VERSION already exists, skipping tag creation"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "Version file not changed"
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Update README.md version
+      if: steps.check_version.outputs.changed == 'true'
+      run: |
+        VERSION=${{ steps.check_version.outputs.version }}
+        README_PATH="README.md"
+        
+        if [ -f "$README_PATH" ]; then
+          # 更新标题中的版本号 (第一行)
+          sed -i "1s/# X-KT 视频下载器 🎥 v[0-9]\+\.[0-9]\+\.[0-9]\+/# X-KT 视频下载器 🎥 $VERSION/" "$README_PATH"
+          
+          # 更新其他可能的版本引用
+          sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+ BUG修复/$VERSION BUG修复/g" "$README_PATH"
+          sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+ 新功能/$VERSION 新功能/g" "$README_PATH"
+          sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+ 更新内容/$VERSION 更新内容/g" "$README_PATH"
+          
+          echo "Updated README.md version to $VERSION"
+        else
+          echo "README.md not found"
+        fi
+
+    - name: Commit README.md changes
+      if: steps.check_version.outputs.changed == 'true'
+      run: |
+        # 配置 Git 用户信息
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        git add README.md
+        if git diff --staged --quiet; then
+          echo "No changes to commit in README.md"
+        else
+          git commit -m "docs: update README.md version to ${{ steps.check_version.outputs.version }}"
+          git push origin ${{ github.ref_name }}
+          echo "Committed and pushed README.md version update"
+        fi
+
+    - name: Create and push tag
+      if: steps.check_version.outputs.changed == 'true'
+      run: |
+        VERSION=${{ steps.check_version.outputs.version }}
+        echo "Creating tag: $VERSION"
+        
+        # 配置 Git 用户信息
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # 创建标签
+        git tag -a "$VERSION" -m "Auto-generated tag for version $VERSION"
+        
+        # 推送标签
+        git push origin "$VERSION"
+        
+        echo "Tag $VERSION created and pushed successfully"
+
+  # 构建和测试任务
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    needs: auto-tag
+    if: always()  # 即使 auto-tag 被跳过也要运行
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 获取完整历史，用于版本标签
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
-        go-version: '1.20'
+        go-version: ${{ env.GO_VERSION }}
 
     - name: Cache Go modules
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
-        path: ~/go/pkg/mod
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
@@ -32,59 +146,134 @@ jobs:
     - name: Download dependencies
       run: go mod download
 
-    - name: Build
-      run: go build -v ./...
+    - name: Verify dependencies
+      run: go mod verify
 
-    - name: Test
+    - name: Run tests
       run: go test -v ./...
 
-    - name: Build for multiple platforms
-      run: |
-        mkdir -p dist
-        # Windows
-        GOOS=windows GOARCH=amd64 go build -ldflags "-X main.Version=${{ github.ref_name }}" -o dist/videodown-windows-amd64.exe
-        # Linux
-        GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Version=${{ github.ref_name }}" -o dist/videodown-linux-amd64
-        # macOS
-        GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.Version=${{ github.ref_name }}" -o dist/videodown-macos-amd64
-        # macOS ARM64 (Apple Silicon)
-        GOOS=darwin GOARCH=arm64 go build -ldflags "-X main.Version=${{ github.ref_name }}" -o dist/videodown-macos-arm64
+    - name: Build application
+      run: go build -v .
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: videodown-binaries
-        path: dist/
-        retention-days: 30
-
-  # 可选：创建发布版本（仅在推送标签时触发）
-  release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+  # 多平台构建任务
+  build-matrix:
+    name: Build for multiple platforms
     runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    strategy:
+      matrix:
+        include:
+          - goos: windows
+            goarch: amd64
+            suffix: .exe
+          - goos: windows
+            goarch: arm64
+            suffix: .exe
+          - goos: linux
+            goarch: amd64
+            suffix: ''
+          - goos: linux
+            goarch: arm64
+            suffix: ''
+          - goos: darwin
+            goarch: amd64
+            suffix: ''
+          - goos: darwin
+            goarch: arm64
+            suffix: ''
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
-        go-version: '1.20'
+        go-version: ${{ env.GO_VERSION }}
 
-    - name: Build release binaries
+    - name: Get version
+      id: version
       run: |
-        mkdir -p release
-        # Windows
-        GOOS=windows GOARCH=amd64 go build -ldflags "-X main.Version=${{ github.ref_name }}" -o release/videodown-${{ github.ref_name }}-windows-amd64.exe
-        # Linux
-        GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Version=${{ github.ref_name }}" -o release/videodown-${{ github.ref_name }}-linux-amd64
-        # macOS
-        GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.Version=${{ github.ref_name }}" -o release/videodown-${{ github.ref_name }}-macos-amd64
-        GOOS=darwin GOARCH=arm64 go build -ldflags "-X main.Version=${{ github.ref_name }}" -o release/videodown-${{ github.ref_name }}-macos-arm64
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/}
+        else
+          VERSION=$(cat version.txt 2>/dev/null || echo "dev-$(git rev-parse --short HEAD)")
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+
+    - name: Build binary
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+        CGO_ENABLED: 0
+      run: |
+        BINARY_NAME="${{ env.APP_NAME }}-${{ steps.version.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
+        go build -ldflags "-s -w -X main.Version=${{ steps.version.outputs.version }}" -o "$BINARY_NAME" .
+        echo "Built: $BINARY_NAME"
+        ls -la "$BINARY_NAME"
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
+        path: ${{ env.APP_NAME }}-*
+        retention-days: 30
+
+  # 发布任务（仅在推送标签时触发）
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: build-matrix
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./artifacts
+
+    - name: Prepare release files
+      run: |
+        mkdir -p ./release
+        find ./artifacts -name "${{ env.APP_NAME }}-*" -type f -exec cp {} ./release/ \;
+        ls -la ./release/
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/}
+        echo "## 🚀 ${{ env.APP_NAME }} $VERSION" > CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### 📦 下载链接" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        for file in ./release/*; do
+          filename=$(basename "$file")
+          echo "- [$filename](${{ github.server_url }}/${{ github.repository }}/releases/download/$VERSION/$filename)" >> CHANGELOG.md
+        done
+        echo "" >> CHANGELOG.md
+        echo "### 📋 更新内容" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        
+        # 尝试从最近的提交中生成更新日志
+        git log --pretty=format:"- %s" --since="1 week ago" >> CHANGELOG.md || echo "- 版本更新和功能改进" >> CHANGELOG.md
+        
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        cat CHANGELOG.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
-        files: release/*
+        files: ./release/*
+        body: ${{ steps.changelog.outputs.changelog }}
+        draft: false
+        prerelease: false
         generate_release_notes: true
+        make_latest: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,10 +1,10 @@
-# X-KT 视频下载器 🎥 v1.3.2
+# X-KT 视频下载器 🎥 V1.4.0
 
 ![X-KT 视频下载器 Screenshot](https://private-user-images.githubusercontent.com/13282035/481367744-307e8eaf-b517-4a1a-8b3c-e66a056d1662.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTYwMzI4NjYsIm5iZiI6MTc1NjAzMjU2NiwicGF0aCI6Ii8xMzI4MjAzNS80ODEzNjc3NDQtMzA3ZThlYWYtYjUxNy00YTFhLThiM2MtZTY2YTA1NmQxNjYyLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA4MjQlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwODI0VDEwNDkyNlomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTE5ZDU0ODBkNTBiNGE2MzM5ZmI4OTdkYTY4MGUwZmMzZjUzMTQ1ODQwM2M5M2E2MWZhMmRjNWIxYzg4ZDM0MDImWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.Gl1uEV0-g3FePtr2rjk0qnyYFCMCVVICAQj4lETvAro)
 
 一个基于 Go 语言开发的现代化视频下载和管理工具，支持多平台视频下载、智能缩略图生成和响应式 Web 界面。
 
-## 🐛 v1.3.2 BUG修复
+## 🐛 V1.4.0 BUG修复
 
 ### 🔧 临时文件清理优化
 - **智能文件检测**：修复了任务停止时临时文件清理的BUG
@@ -13,7 +13,7 @@
 - **完整清理**：能正确清理如 `视频名.mp4.part`、`视频名.mp4.ytdl` 等所有相关临时文件
 - **日志优化**：调试信息现在显示实际检测的文件扩展名，便于问题排查
 
-## 🆕 v1.3.0 新功能
+## 🆕 V1.4.0 新功能
 
 ### 📋 批量操作增强
 - **视频格式选择**：新增视频播放在线解码及保存格式选择，无论下载的视频格式是什么，通过FFmpeg进行转码和编码
@@ -24,7 +24,7 @@
   - 全部未选：显示为未选状态
 - **用户体验优化**：批量操作更加便捷，提升视频管理效率
 
-## 🔄 v1.2.0 更新内容
+## 🔄 V1.4.0 更新内容
 
 ### 🔧 FFmpeg 集成优化
 - **自动版本检测**：新增 FFmpeg 版本显示功能，实时显示已安装的 FFmpeg 版本信息
