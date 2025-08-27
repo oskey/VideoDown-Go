@@ -222,9 +222,11 @@ jobs:
           cp -r templates "$PACKAGE_NAME/"
         fi
         
-        # 复制 favicon.ico
+        # 复制 favicon.ico（检查是否为文件）
         if [ -f "favicon.ico" ]; then
           cp favicon.ico "$PACKAGE_NAME/"
+        elif [ -f "templates/favicon.ico" ]; then
+          cp templates/favicon.ico "$PACKAGE_NAME/"
         fi
         
         # 创建压缩包
