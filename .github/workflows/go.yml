@@ -5,7 +5,6 @@
 name: Build and Release
 
 on:
-  # 推送到主分支时进行构建测试
   push:
     branches: [ "main", "master" ]
     paths:
@@ -13,14 +12,11 @@ on:
       - '**/*.go'
       - 'go.mod'
       - 'go.sum'
-  # PR时进行构建测试
-  pull_request:
-    branches: [ "main", "master" ]
-  # 推送标签时自动发布
-  push:
     tags:
       - 'v*.*.*'
       - 'V*.*.*'
+  pull_request:
+    branches: [ "main", "master" ]
 
 env:
   GO_VERSION: '1.21'
@@ -121,12 +117,12 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     needs: auto-tag
-    if: always()  # 即使 auto-tag 被跳过也要运行
+    if: always() && (needs.auto-tag.result == 'success' || needs.auto-tag.result == 'skipped')
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # 获取完整历史，用于版本标签
+        fetch-depth: 0
 
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -152,15 +148,18 @@ jobs:
     - name: Run tests
       run: go test -v ./...
 
+    - name: Run go vet
+      run: go vet ./...
+
     - name: Build application
-      run: go build -v .
+      run: go build -v ./...
 
   # 多平台构建任务
   build-matrix:
-    name: Build for multiple platforms
+    name: Build Matrix
     runs-on: ubuntu-latest
     needs: build-and-test
-    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    if: always() && needs.build-and-test.result == 'success'
     strategy:
       matrix:
         include:
@@ -194,10 +193,12 @@ jobs:
     - name: Get version
       id: version
       run: |
-        if [[ $GITHUB_REF == refs/tags/* ]]; then
+        if [ -f "version.txt" ]; then
+          VERSION=$(cat version.txt)
+        elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
           VERSION=${GITHUB_REF#refs/tags/}
         else
-          VERSION=$(cat version.txt 2>/dev/null || echo "dev-$(git rev-parse --short HEAD)")
+          VERSION="dev-$(git rev-parse --short HEAD)"
         fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Version: $VERSION"
@@ -251,29 +252,57 @@ jobs:
         echo "" >> CHANGELOG.md
         echo "### 📦 下载链接" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
+        echo "| 平台 | 架构 | 下载链接 |" >> CHANGELOG.md
+        echo "|------|------|----------|" >> CHANGELOG.md
+        
         for file in ./release/*; do
-          filename=$(basename "$file")
-          echo "- [$filename](${{ github.server_url }}/${{ github.repository }}/releases/download/$VERSION/$filename)" >> CHANGELOG.md
+          if [ -f "$file" ]; then
+            filename=$(basename "$file")
+            if [[ "$filename" == *"windows"* ]]; then
+              platform="🪟 Windows"
+            elif [[ "$filename" == *"linux"* ]]; then
+              platform="🐧 Linux"
+            elif [[ "$filename" == *"darwin"* ]]; then
+              platform="🍎 macOS"
+            else
+              platform="❓ Unknown"
+            fi
+            
+            if [[ "$filename" == *"amd64"* ]]; then
+              arch="x64"
+            elif [[ "$filename" == *"arm64"* ]]; then
+              arch="ARM64"
+            else
+              arch="Unknown"
+            fi
+            
+            echo "| $platform | $arch | [$filename](https://github.com/${{ github.repository }}/releases/download/$VERSION/$filename) |" >> CHANGELOG.md
+          fi
         done
-        echo "" >> CHANGELOG.md
-        echo "### 📋 更新内容" >> CHANGELOG.md
-        echo "" >> CHANGELOG.md
         
-        # 尝试从最近的提交中生成更新日志
-        git log --pretty=format:"- %s" --since="1 week ago" >> CHANGELOG.md || echo "- 版本更新和功能改进" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### 🔧 安装说明" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "1. 根据您的操作系统下载对应的二进制文件" >> CHANGELOG.md
+        echo "2. 解压并运行程序" >> CHANGELOG.md
+        echo "3. 访问 http://localhost:8888 开始使用" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### 📋 系统要求" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "- 需要安装 FFmpeg 和 yt-dlp" >> CHANGELOG.md
+        echo "- 详细安装说明请参考 [install.md](https://github.com/${{ github.repository }}/blob/main/install.md)" >> CHANGELOG.md
         
-        echo "changelog<<EOF" >> $GITHUB_OUTPUT
-        cat CHANGELOG.md >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        cat CHANGELOG.md
 
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
+        tag_name: ${{ github.ref_name }}
+        name: ${{ env.APP_NAME }} ${{ github.ref_name }}
+        body_path: CHANGELOG.md
         files: ./release/*
-        body: ${{ steps.changelog.outputs.changelog }}
         draft: false
         prerelease: false
-        generate_release_notes: true
         make_latest: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
