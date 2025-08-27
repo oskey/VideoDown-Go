@@ -72,10 +72,14 @@ go run main.go
    - **手动下载**：也可以自行下载并放入项目根目录的 `bin/` 文件夹中
      - yt-dlp 下载地址：https://github.com/yt-dlp/yt-dlp/releases
      - FFmpeg 下载地址：https://ffmpeg.org/download.html
-2. **浏览器配置**：推荐使用 **Firefox** 浏览器登录相关视频网站
+2. **浏览器配置**：**必须使用 Firefox 浏览器**登录相关视频网站
+   - **Firefox 下载地址**：https://www.mozilla.org/firefox/
    - yt-dlp 会自动通过 Firefox 获取 Cookie 信息
    - 这样可以确保下载到最高品质的视频内容
-3. **浏览器选择**：不推荐使用 Chrome，因为 Cookie 获取配置相对复杂
+3. **浏览器限制**：**不支持 Chrome 浏览器**
+   - Chrome 在新版本中会对运行中的浏览器 Cookie 进行锁定，导致 yt-dlp 无法直接获取 Chrome 的 Cookie
+   - yt-dlp 在下载某些需要登录验证的网站视频时，通常需要通过 Cookie 来进行身份验证
+   - 由于无法直接获取 Chrome 的 Cookie，就会出现下载失败或无法获取完整视频信息等问题
 
 > 💡 **提示**：如果下载失败，请检查是否已在 Firefox 中登录对应的视频网站
 
